@@ -1,0 +1,13 @@
+update
+	bethadba.itbi_cidadao_web iw,
+	bethadba.itbi i,
+set
+	iw.parecer = iw.comentario	
+where 
+	i.ano = 2012 and
+	iw.i_itbis = i.i_itbis and
+	iw.situacao = 'D' and
+	iw.comentario is not null and
+	iw.parecer is null and
+	i.i_itbis = ;
+	commit

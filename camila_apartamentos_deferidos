@@ -1,0 +1,22 @@
+UPDATE
+	bethadba.itbi_cidadao_web icw,
+	bethadba.itbi_imoveis_cidadao_web iicw,
+	bethadba.itbi it,
+	bethadba.itbi_imoveis iit
+set
+	iicw.valor_terreno = 0,
+	iicw.valor_construcao = 11751.56,
+	iicw.valor_declarado = 11751.56,
+	iicw.valor_terreno_adm = 0,
+	iicw.valor_construcao_adm = 11751.56,
+	iit.valor_terr = 0,
+	iit.valor_cons = 11751.56,
+	iit.valor_declarado =11751.56
+where
+	icw.i_motivos = 26 and
+	icw.i_solicitacoes = iicw.i_solicitacoes  and
+	icw.i_itbis = it.i_itbis and
+	icw.ano = it.ano and
+	icw.i_itbis = iit.i_itbis and
+	icw.ano = iit.ano and
+	icw.i_itbis in (4106,4140,4139,4138,4137,4190,4185,4184,4174,4173,4172,4171,4170,4169,4168,4167,4166,4165,4164,4163,4162,4161,4160,4136,4135,4127,4126,4125,4120,4108,4107,4105,4104,4101,4100,4099)

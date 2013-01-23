@@ -1,0 +1,15 @@
+SELECT 
+	Receita = string(rr.i_receitas)+' - '+(SELECT nome FROM bethadba.receitas where i_receitas = rr.i_receitas),
+	tipoRubrica = if rr.tipo_rubrica = 'V' then 'Valor'
+				else if rr.tipo_rubrica = 'C' then 'Correção'
+				else if rr.tipo_rubrica = 'J' then 'Juros'
+				else if rr.tipo_rubrica = 'M' then 'Multa'
+				else if rr.tipo_rubrica = 'D' then 'Dívida'
+				else if rr.tipo_rubrica = 'O' then 'Correção de Dívida'
+				else if rr.tipo_rubrica = 'U' then 'Juros de Dívida'
+				else if rr.tipo_rubrica = 'L' then 'Multa de Dívida'
+				endif endif endif endif endif endif endif endif , 
+	rr.rubrica
+FROM bethadba.receitas_rubricas rr where rr.ano = 2012 and rr.i_receitas between 3200 and 3299
+
+SELECT * FROM bethadba.receitas

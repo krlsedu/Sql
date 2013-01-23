@@ -1,0 +1,19 @@
+INSERT into bethadba.funcionarios
+SELECT 2,1975+number(),f.dv,f.i_pessoas,f.dt_admissao,f.tipo_admissao,f.categoria,f.dt_opcao_fgts,f.conta_fgts,f.dt_base,f.contrib_sindical,f.i_sindicatos,f.conta_vaga,f.sai_rais,f.tipo_func,f.tipo_pens,f.conta_adicional,f.conta_licpremio,f.conta_temposerv,f.lei_contrato,f.senha_teclado,f.dt_ini_estprob,f.dt_fin_estprob,f.aprov_estprob,f.aprov_manual,f.tipo_trabalhador,f.total_pensao,f.total_pensao_fgts,f.func_original FROM 
+	bethadba.funcionarios  f,
+	bethadba.hist_funcionarios hf
+where 
+	hf.i_funcionarios = f.i_funcionarios and
+	f.i_entidades = 1 and
+	hf.i_organogramas in (15001, 15002, 15003, 15004) and
+	not exists ( SELECT * FROM bethadba.funcionarios where i_entidades = 2 and i_funcionarios = f.i_funcionarios ) and
+	left ( hf.dt_alteracoes, 4)= 2012
+rollback	
+SELECT * FROM
+	bethadba.funcionarios  f,
+	bethadba.hist_funcionarios hf
+where 
+	hf.i_funcionarios = f.i_funcionarios and
+	f.i_entidades = 1 and
+	hf.i_organogramas in (15001, 15002, 15003, 15004) and
+	not exists ( SELECT 1 FROM bethadba.funcionarios where i_entidades = 2 and i_funcionarios = f.i_funcionarios ) 

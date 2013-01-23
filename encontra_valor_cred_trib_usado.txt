@@ -1,0 +1,11 @@
+SELECT ctr.valor_credito FROM 
+                      		bethadba.creditos_tributarios_receita ctr,
+                      		bethadba.lanctos l,
+                      		bethadba.debitos d
+                  	WHERE
+                      		l.i_lanctos = ctr.i_lanctos AND
+                      		ctr.i_debitos = d.i_debitos AND
+                      		ctr.status_rec <> 'C' AND
+                      		l.i_imoveis = imoveis.i_imoveis AND
+                      		d.parcela = 0 AND
+                      		l.ano = l.ano

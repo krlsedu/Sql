@@ -1,0 +1,16 @@
+SELECT 
+	bethadba.dbf_ret_div_exec(div.i_dividas),
+	pessoa = string(div.i_pessoas)+' - '+ (select nome from bethadba.pessoas where i_pessoas = div.i_pessoas),
+	string(div.ano)+'/'+string(div.parcela),
+	rdiv.i_receitas 
+FROM 
+	bethadba.dividas div,
+	bethadba.rec_dividas rdiv
+where
+	div.i_dividas = rdiv.i_dividas and
+	bethadba.dbf_ret_div_exec(div.i_dividas) = 'N' and
+	div.situacao = 'A' and
+	rdiv.i_receitas = :receita and
+	div.ano = :ano_div
+order by
+	div.i_pessoas,rdiv.parcela

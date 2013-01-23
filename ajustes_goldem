@@ -1,0 +1,39 @@
+update
+	bethadba.itbi_cidadao_web icw,
+	bethadba.itbi_opcoes_cidadao_web io1,
+	bethadba.itbi_opcoes_cidadao_web io2,
+	bethadba.itbi_opcoes_cidadao_web io3,
+	bethadba.itbi_opcoes_cidadao_web io4,
+	bethadba.itbi it,
+	bethadba.itbi_imoveis iti,
+	bethadba.itbi_imoveis_cidadao_web iicw,
+set
+	io1.i_subitem = 8001,
+	io2.i_subitem = 15001,
+	io3.valor = 0,
+	io4.valor = 0,
+	iti.valor_financ = 6580.00,
+	iti.valor_cons = 0,
+	iti.valor_terr = 6580.00,
+	iti.valor_declarado = 6580.00,
+	iicw.valor_construcao = 0,
+	iicw.valor_declarado = 6580.00,
+	iicw.valor_financ = 6580.00
+	
+	
+where 
+	icw.i_solicitacoes = io1.i_solicitacoes and
+	io1.i_solicitacoes = io2.i_solicitacoes and 
+	io2.i_solicitacoes = io3.i_solicitacoes and
+	io3.i_solicitacoes = io4.i_solicitacoes and
+	icw.i_itbis = it.i_itbis and
+	it.ano = 2012 and
+	iti.i_itbis = it.i_itbis and
+	iti.ano = it.ano and
+	icw.i_solicitacoes = iicw.i_solicitacoes and
+	io1.i_item = 8000 and
+	io2.i_item = 15000 and
+	io3.i_item = 37099 and
+	io4.i_item = 51099 and
+	icw.i_solicitacoes in (434,435,436,437,438,439,441,443,444,445,446,447,448,449,453,454,455,456,457,458,459,461,462,463,464,465,466,467,468,469,475,478);
+	commit

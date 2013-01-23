@@ -1,0 +1,24 @@
+update
+	bethadba.lanctos l,
+	bethadba.config_lanctos cl,
+	bethadba.debitos d,
+	bethadba.rec_debitos rd,
+	bethadba.imoveis i
+set
+	cl.i_config= cl.i_config+10,
+	rd.valor_desc = rd.valor_desc/2
+where 
+	l.i_lanctos = cl.i_lanctos and
+	l.i_lanctos = d.i_lanctos and
+	d.i_debitos = rd.i_debitos and
+	l.i_imoveis = i.i_imoveis and
+	cl.i_config <=10 and
+	l.ano = 2013 and 
+	l.i_receitas = 100 and 
+	l.situacao = 'A' and
+	exists (SELECT FIRST(1) INTO deve FROM bethadba.dividas 
+		  WHERE dividas.i_refer = i.i_imoveis AND dividas.i_receitas IN (100, 4500) AND
+		  dividas.ano = 2012 AND dividas.situacao = 'A') and
+	not exists (SELECT FIRST(1) INTO deve FROM bethadba.dividas 
+		  WHERE dividas.i_refer = i.i_imoveis AND dividas.i_receitas IN (100, 4500) AND
+		  dividas.ano = 2011 AND dividas.situacao = 'A')

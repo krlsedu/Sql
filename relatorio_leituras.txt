@@ -1,0 +1,31 @@
+	valor_mes_atual = (SELECT
+					    sum(ob_sub.valor)
+					    
+					FROM 
+					    bethadba.opcoes_boletim ob_sub,
+					    bethadba.bcl,
+					    bethadba.meses
+					WHERE 
+					    ob_sub.i_item = bcl.i_item AND
+					    ob_sub.ano = bcl.ano AND    
+					     (
+					           (
+					                ob_sub.i_item IN (CAST((string(50 + (if i_mes > 1 then i_mes - 1 else 12 endif)) + '098') AS INTEGER)) AND
+					               ( 
+					                   isnull((SELECT valor FROM bethadba.opcoes_boletim WHERE i_item = (CAST((string(50  + (if i_mes > 1 then i_mes - 1 else 12 endif)) + '098') AS INTEGER)) AND ano=ob_sub.ano AND i_boletim = ob_sub.i_boletim),0) >
+					                   isnull((SELECT valor FROM bethadba.opcoes_boletim WHERE i_item = (CAST((string(100 + (if i_mes > 1 then i_mes - 1 else 12 endif)) + '098') AS INTEGER)) AND ano=ob_sub.ano AND i_boletim = ob_sub.i_boletim),0)
+					                )
+					            )
+					            OR
+					            (
+					                ob_sub.i_item IN ((CAST((string(100 + (if i_mes > 1 then i_mes - 1 else 12 endif)) + '098') AS INTEGER))) AND 
+					               ( 
+					                   isnull((SELECT valor FROM bethadba.opcoes_boletim WHERE i_item = (CAST((string(50  + (if i_mes > 1 then i_mes - 1 else 12 endif)) + '098') AS INTEGER)) AND ano=bethadba.dbf_ano_base(ob_sub.i_boletim,year(today()),(CAST((string(50  + (if i_mes > 1 then i_mes - 1 else 12 endif)) + '098') AS INTEGER)),'opcoes_boletim') AND i_boletim = ob_sub.i_boletim),0) <= 0
+					               )
+					                AND
+					                bethadba.dbf_ano_base(ob_sub.i_boletim,year(today()),(CAST((string(100 + (if i_mes > 1 then i_mes - 1 else 12 endif)) + '098') AS INTEGER)),'opcoes_boletim') = ob_sub.ano
+					            )
+					            
+					     )
+						and
+						i_mes = d.parcela)

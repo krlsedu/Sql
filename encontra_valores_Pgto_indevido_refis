@@ -1,0 +1,12 @@
+SELECT p.valor_pago - p.valor_juro - p.valor_multa - p.valor_corr,rp.valor_parcela,* FROM 
+	bethadba.mov_convenios mc,
+	bethadba.pagtos p,
+	bethadba.refis_parcelas rp
+	
+where
+	p.i_mov_conv = mc.i_mov_conv and 
+	p.i_num_parcelas = rp.i_num_parcelas and
+	p.data_est is null and
+	(p.valor_pago - p.valor_juro - p.valor_multa - p.valor_corr) <> rp.valor_parcela and
+	p.valor_dif = 0 and
+	mc.nome_arq = 'BB250712.ret'

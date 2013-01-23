@@ -1,0 +1,16 @@
+UPDATE
+	bethadba.itbi_cidadao_web icw,
+	bethadba.itbi_imoveis_cidadao_web iicw
+set
+	iicw.valor_construcao = 3362.19,
+	iicw.valor_declarado = 3362.19,
+	iicw.valor_terreno_adm = 0,
+	iicw.valor_construcao_adm = 3362.19,
+	icw.comentario = 'RENDA FAMILIAR ABAIXO DE 6 SALÁRIOS MINIMOS',
+	icw.processo = null,
+	icw.situacao = 'E'
+where
+	icw.i_solicitacoes = iicw.i_solicitacoes and
+	icw.situacao = 'I' and
+	icw.i_motivos = 26 and
+	icw.i_solicitacoes in (2672,2670,2668,2666,2664,2662,2660,2658,2656,2654,2650,2648,2644,2642,2652,2640,2637,2635,2633,2632,2629,2627,2625,2622,2620,2618,2616,2614,2611,2609,2638,2607,2602,2598,2595)

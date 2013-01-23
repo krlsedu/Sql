@@ -1,0 +1,17 @@
+SELECT 	 
+	eco_nome = string(e.i_economicos) +' - '+ (select nome from bethadba.pessoas where i_pessoas = l.i_pessoas),
+	cpf_cnpj = if (select pp.tipo_pessoa from bethadba.pessoas pp where i_pessoas = l.i_pessoas)= 'J' then (SELECT cnpj from bethadba.pessoas_juridicas where i_pessoas = l.i_pessoas ) else (SELECT cpf from bethadba.pessoas_fisicas where i_pessoas = l.i_pessoas ) endif,
+	sum(isnull(valor_base,0)) 
+FROM 
+	bethadba.debitos_atividades da,
+	bethadba.debitos d,
+	bethadba.lanctos l,
+	bethadba.economicos e
+where
+	da.i_debitos = d.i_debitos and
+	d.i_lanctos = l.i_lanctos and
+	e.i_economicos = l.i_economicos and
+	((l.ano = (year(today())) and d.parcela<= (month(today()))) or (l.ano = (year(today())-1) and d.parcela > (month(today()))) ) and
+	d.flag not in ('C')
+group by l.i_pessoas,e.i_economicos
+order by e.i_economicos

@@ -1,0 +1,23 @@
+ALTER FUNCTION "tecbth_delta"."dbf_atualiza_lanctos_nfse"(in p_altera integer)
+returns integer
+begin
+	update
+		bethadba.declarantes dc,
+		bethadba.lanctos l,
+		bethadba.debitos d,
+		bethadba.rec_debitos rd
+	set
+		l.simples = 'E'
+	where
+		dc.i_economicos = l.i_economicos and
+		l.i_lanctos = d.i_lanctos and
+		d.i_debitos = rd.i_debitos and
+		l.ano >= 2012 and
+		l.i_receitas = 200 and
+		d.flag = 'A' and
+		dc.data_refer_nfe is not null and
+		dc.tipo_economico = 'H' and
+		(l.simples is null or l.simples = 'N') and
+		rd.valor_gerado = 0;
+	commit;
+end

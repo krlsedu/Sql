@@ -1,0 +1,22 @@
+update
+    bethadba.lanctos l,
+    bethadba.debitos d,
+    bethadba.itbi it,
+    bethadba.itbi_cidadao_web icw
+set
+    l.situacao = 'C',
+    d.flag = 'C',
+    it.situacao = 'C',
+    it.comentario = 'Cancelado automaticamente devido a estar vencido por mais de 30 dias. comentário original: '+it.comentario ,
+    icw.situacao = 'I',
+    icw.parecer = 'Cancelado automaticamente devido a estar vencido por mais de 30 dias.'
+where
+    l.i_lanctos = d.i_lanctos and
+    l.i_itbis = it.i_itbis and
+    l.ano = it.ano and
+    l.i_itbis = icw.i_itbis and
+    l.ano = icw.ano and
+    not exists (select * from bethadba.rec_lanctos rl where rl.i_lanctos =  l.i_lanctos and rl.i_isencoes is not null) and
+    d.flag = 'A' and
+    it.situacao <> 'T' and
+    d.data_vcto < dateadd(day,-30,today())

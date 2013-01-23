@@ -1,0 +1,12 @@
+SELECT * FROM 
+	bethadba.lanctos l,
+	bethadba.debitos d,
+	bethadba.pagtos pg
+WHERE
+	l.i_lanctos = d.i_lanctos and
+	d.i_debitos = pg.i_debitos and
+	l.ano = 2008 and
+	l.i_pessoas = 82332 and
+	d.parcela = 2
+ 
+SELECT * FROM tecbth_delta.ebf_smmp where numero_cadastro = 31005577 and left(data_operacao_inv,4)=2008 and codigo_divida = 24 order by parcela_divida

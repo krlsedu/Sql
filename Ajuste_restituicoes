@@ -1,0 +1,21 @@
+SELECT * FROM bethadba.restituicoes where i_restituicoes = 49
+SELECT * FROM 
+
+	bethadba.restituicoes_pagtos rp,
+	bethadba.pagtos p
+where 
+	rp.i_restituicoes = 49 and
+	p.i_pagtos = rp.i_pagtos and
+	p.i_pagtos = 3563044
+
+
+UPDATE
+
+	bethadba.restituicoes_pagtos rp,
+	bethadba.pagtos p
+set
+	rp.i_restituicoes = 50
+where 
+	rp.i_restituicoes = 49 and
+	p.i_pagtos = rp.i_pagtos and
+	p.i_pagtos = 3563044; commit

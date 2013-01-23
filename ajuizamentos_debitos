@@ -1,0 +1,10 @@
+SELECT * FROM
+	bethadba.debitos_dividas dd, 
+	bethadba.dividas d,
+	bethadba.ajuizamentos_dividas ad,
+	bethadba.ajuizamentos a
+WHERE
+	dd.i_dividas = d.i_dividas and
+	d.i_dividas = ad.i_dividas and
+	a.i_ajuizamentos = ad.i_ajuizamentos and
+	

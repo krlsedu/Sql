@@ -1,0 +1,37 @@
+SELECT
+p.i_pessoas,
+p.nome, 
+vlr_or=sum(  bethadba.dbf_ret_valor_debito(d.i_debitos,'V','S','S',:dt_base,'N') -
+            bethadba.dbf_ret_valor_debito(d.i_debitos,'D','S','S')),
+vlr = sum(  bethadba.dbf_ret_valor_debito(d.i_debitos,'V','S','S',:dt_base,'N') -
+            bethadba.dbf_ret_valor_debito(d.i_debitos,'D','S','S') +
+            bethadba.dbf_ret_valor_debito(d.i_debitos,'C','S','S',:dt_base)+
+            bethadba.dbf_ret_valor_debito(d.i_debitos,'J','S','S',:dt_base)+
+            bethadba.dbf_ret_valor_debito(d.i_debitos,'M','S','S',:dt_base) )
+
+FROM
+
+bethadba.pessoas p,
+bethadba.pedidos_processos pp,
+bethadba.lanctos l,
+bethadba.rec_lanctos rl,
+bethadba.debitos d,
+bethadba.rec_debitos rd,
+bethadba.receitas r
+
+
+WHERE              
+r.i_receitas = l.i_receitas AND
+p.i_pessoas = pp.i_pessoas AND
+l.i_pedidos = pp.i_pedidos AND
+l.i_lanctos = d.i_lanctos AND
+l.i_lanctos = rl.i_lanctos AND
+d.i_debitos = rd.i_debitos AND
+rl.i_isencoes IS NULL AND
+d.flag = 'A' AND
+l.simulado = 'N' AND
+d.data_vcto < :dt_base AND
+d.unica = 'N' 
+GROUP BY 
+p.i_pessoas,
+p.nome

@@ -1,0 +1,66 @@
+SELECT count() FROM 
+	bethadba.lanctos l,
+	//bethadba.debitos d,
+	bethadba.imoveis i,
+	bethadba.pessoas p
+where
+	l.i_imoveis = i.i_imoveis and
+	//l.i_lanctos = d.i_lanctos and
+	i.i_pessoas = p.i_pessoas and
+	l.ano = 2013 and
+	l.i_receitas =100 and
+	p.nome like 'A%'and
+	l.i_imoveis not in ( SELECT l.i_imoveis FROM bethadba.lanctos l,
+	bethadba.numeros_baixas nb
+where 
+	nb.i_lanctos = l.i_lanctos and
+	l.ano = 2013 and
+	l.i_receitas =100)
+
+
+
+
+
+
+
+
+
+
+select 4840526+22116-max(i_num_baixas) from bethadba.numeros_baixas
+
+SELECT * FROM bethadba.audit_numeros_baixas where data_hora_audit > '2013-01-17 19:59:00.000' order by i_num_baixas desc
+
+4840526+22116
+4860980
+
+SELECT * FROM bethadba.numeros_baixas
+
+13138
+
+SELECT count() FROM 
+	bethadba.lanctos l,
+	//bethadba.debitos d,
+	bethadba.imoveis i,
+	bethadba.pessoas p
+where
+	l.i_imoveis = i.i_imoveis and
+	//l.i_lanctos = d.i_lanctos and
+	i.i_pessoas = p.i_pessoas and
+	l.ano = 2013 and
+	l.i_receitas =100 and
+	p.nome like 'A%'and
+	l.i_imoveis in ( SELECT l.i_imoveis FROM bethadba.lanctos l,
+	bethadba.numeros_baixas nb
+where 
+	nb.i_lanctos = l.i_lanctos and
+	l.ano = 2013 and
+	l.i_receitas =100)
+
+SELECT l.i_imoveis FROM bethadba.lanctos l,
+	bethadba.numeros_baixas nb
+where 
+	nb.i_lanctos = l.i_lanctos and
+	l.ano = 2013 and
+	l.i_receitas =100
+
+SELECT * FROM bethadba.pessoas where nome >= 'ANDERSON%' and nome like 'a%' 

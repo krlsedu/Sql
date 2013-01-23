@@ -1,0 +1,2 @@
+//gera log de todas transações
+-o nome_do_arquivo -zr all

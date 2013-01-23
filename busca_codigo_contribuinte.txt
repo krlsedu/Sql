@@ -1,0 +1,1 @@
+bethadba.dbf_getCodigoPessoa(cpf_cnpj,301)

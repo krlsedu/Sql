@@ -1,0 +1,21 @@
+create variable pessoa integer;
+
+for sql1 as sql2 cursor for 
+  SELECT ct.i_pessoas as pessoa FROM
+		bethadba.creditos_tomadores ct
+	where
+		exists(select 1 from bethadba.imoveis where imoveis.i_pessoas = pessoa)
+do
+insert into bethadba.creditos_imoveis_indicacoes (
+	select i.i_imoveis,bethadba.dbf_ret_cpf_cnpj(p.i_pessoas,p.tipo_pessoa),2013,number()-1 from
+		bethadba.pessoas p,
+		bethadba.imoveis i
+	where
+		i.i_pessoas = p.i_pessoas and
+		p.i_pessoas = pessoa
+	order by
+		i.i_imoveis
+)
+end for;
+
+commit

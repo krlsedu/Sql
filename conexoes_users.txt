@@ -1,0 +1,5 @@
+
+insert into bethadba.conexoes_usr
+values(1,year(today()),301);
+set @@sist_betha_corrente = @@betha_tributos;
+commit

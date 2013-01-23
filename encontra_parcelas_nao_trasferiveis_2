@@ -1,0 +1,32 @@
+SELECT l1.i_pessoas,l1.ano,d1.parcela,l1.i_receitas,* FROM 
+	bethadba.lanctos l1,
+	bethadba.lanctos l2,
+	bethadba.debitos d1,
+	bethadba.debitos d2
+where
+	l1.i_lanctos = d1.i_lanctos and
+	l2.i_lanctos = d2.i_lanctos and
+	l1.i_lanctos <> l2.i_lanctos and
+	l1.ano = l2.ano and
+	l1.i_receitas = l2.i_receitas and
+	l1.i_pessoas = l2.i_pessoas and
+	isnull(l1.i_responsavel,0) = isnull(l2.i_responsavel,0) and
+	isnull(l1.i_imoveis,0) = isnull(l2.i_imoveis,0) and
+	isnull(l1.i_economicos,0) = isnull(l2.i_economicos,0) and
+	isnull(l1.i_melhorias,0) = isnull(l2.i_melhorias,0) and
+	isnull(l1.i_pedidos,0) = isnull(l2.i_pedidos,0) and
+	isnull(l1.i_itbis,0) = isnull(l2.i_itbis,0) and
+	isnull(l1.i_projetos,0) = isnull(l2.i_projetos,0) and
+	isnull(l1.i_fichas,0) = isnull(l2.i_fichas,0) and
+	isnull(l1.i_autos,0) = isnull(l2.i_autos,0) and
+	isnull(l1.i_notas,0) = isnull(l2.i_notas,0) and
+	l1.complementar = l2.complementar and
+	d1.parcela = d2.parcela and
+	//d1.flag = d2.flag and
+	//l1.i_pessoas = 49439 and
+	d1.flag in ('A') and
+	d2.flag in ('T') and
+	l1.complementar = 'N'
+order by l1.i_pessoas,l1.ano,d1.parcela
+
+

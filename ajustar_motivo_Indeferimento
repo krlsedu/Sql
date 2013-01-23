@@ -1,0 +1,8 @@
+update 
+	bethadba.itbi_cidadao_web 
+set 
+	comentario = 'Motivo do indeferimento: '+ parecer + ' Comentário informado: '+comentario, 
+	processo = 'INDEFERIDO' 
+where 
+	situacao = 'I' and 
+	(processo <> 'INDEFERIDO' or processo is null) 

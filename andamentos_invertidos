@@ -1,0 +1,15 @@
+
+SELECT a1.i_dataenvio,dateadd(ss,1,a1.i_dataenvio),a1.datarecebimento,a1.i_processo,a1.i_ano,* FROM 
+	bethadba.andamentos a1,
+	bethadba.andamentos a2
+where
+	a1.i_processo = a2.i_processo and
+	a1.i_ano = a2.i_ano and
+	a1.i_dataenvio <> a2.i_dataenvio and
+	a1.datarecebimento = a2.datarecebimento and
+	a1.i_dataenvio > a1.datarecebimento
+	and left(a1.i_dataenvio,10) = left(a1.datarecebimento,10) and
+	a1.i_processo = 5850
+order by 
+	a1.i_ano,a1.i_processo,a1.datarecebimento
+	 

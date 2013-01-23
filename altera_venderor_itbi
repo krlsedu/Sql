@@ -1,0 +1,17 @@
+UPDATE
+	bethadba.itbi_cidadao_web icw,
+	bethadba.itbi_imoveis_cidadao_web iicw,
+	bethadba.itbi it,
+	bethadba.itbi_imoveis iti
+set
+	iicw.i_vendedores = :vendedor,
+	it.i_vendedor = :vendedor,
+	iti.i_vendedores = :vendedor
+	
+where
+	icw.i_solicitacoes = iicw.i_solicitacoes and
+	icw.i_itbis = it.i_itbis and
+	it.i_itbis = iti.i_itbis and
+	it.ano = iti.ano and
+	it.ano = 2012 and
+	icw.i_solicitacoes = :solicitacao;commit

@@ -1,0 +1,11 @@
+SELECT d.flag,* FROM 
+	bethadba.lanctos l,
+	bethadba.debitos d,
+	//bethadba.audit_debitos ad
+where
+	//ad.i_debitos = d.i_debitos and
+	d.i_lanctos = l.i_lanctos and
+	l.i_economicos=21511 and
+	l.ano = 2010 and
+	l.i_receitas = 3400 and
+	d.parcela = 12

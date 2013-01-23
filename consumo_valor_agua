@@ -1,0 +1,82 @@
+SELECT 
+	l.ano,
+	d.parcela,
+	sum(rd.valor_gerado),
+	count(ob.i_boletim),
+	tecbth_delta.dbf_fc_existe_opc_bcl(ob.i_boletim,69001,69009,year(today())),
+	consumo =  (SELECT
+				    sum(ob_sub.valor) - sum(ob_sub_ant.valor)
+				FROM 
+				    bethadba.opcoes_boletim ob_sub,
+				    bethadba.opcoes_boletim ob_sub_ant,
+				    bethadba.opcoes_boletim ob_sub_rel,
+				    bethadba.bcl,
+				    bethadba.meses
+				WHERE 
+				    ob_sub.i_item = bcl.i_item AND
+				    ob_sub.ano = bcl.ano AND 
+				    ob_sub.i_boletim = ob_sub_ant.i_boletim AND
+           			ob_sub.i_boletim = ob_sub_rel.i_boletim AND
+				     (
+				           (
+				                ob_sub.i_item IN (CAST((string(50 + i_mes) + '098') AS INTEGER)) AND
+				               ( 
+				                   isnull((SELECT valor FROM bethadba.opcoes_boletim WHERE i_item = (CAST((string(50  + i_mes) + '098') AS INTEGER)) AND ano=ob_sub.ano AND i_boletim = ob_sub.i_boletim),0) >
+				                   isnull((SELECT valor FROM bethadba.opcoes_boletim WHERE i_item = (CAST((string(100 + i_mes) + '098') AS INTEGER)) AND ano=ob_sub.ano AND i_boletim = ob_sub.i_boletim),0)
+				                )
+				            )
+				            OR
+				            (
+				                ob_sub.i_item IN ((CAST((string(100 + i_mes) + '098') AS INTEGER))) AND 
+				               ( 
+				                   isnull((SELECT valor FROM bethadba.opcoes_boletim WHERE i_item = (CAST((string(50  + i_mes) + '098') AS INTEGER)) AND ano=bethadba.dbf_ano_base(ob_sub.i_boletim,year(today()),(CAST((string(50  + i_mes) + '098') AS INTEGER)),'opcoes_boletim') AND i_boletim = ob_sub.i_boletim),0) <= 0
+				               )
+				                AND
+				                bethadba.dbf_ano_base(ob_sub.i_boletim,year(today()),(CAST((string(100 + i_mes) + '098') AS INTEGER)),'opcoes_boletim') = ob_sub.ano
+				            )
+				            
+				     )
+					AND
+					(
+				           (
+				                ob_sub_ant.i_item IN (CAST((string(50 + (IF i_mes > 1 THEN i_mes - 1 ELSE 12 ENDIF)) + '098') AS INTEGER)) AND
+				               ( 
+				                   isnull((SELECT valor FROM bethadba.opcoes_boletim WHERE i_item = (CAST((string(50  + (IF i_mes > 1 THEN i_mes - 1 ELSE 12 ENDIF)) + '098') AS INTEGER)) AND ano=ob_sub_ant.ano AND i_boletim = ob_sub_ant.i_boletim),0) >
+				                   isnull((SELECT valor FROM bethadba.opcoes_boletim WHERE i_item = (CAST((string(100 + (IF i_mes > 1 THEN i_mes - 1 ELSE 12 ENDIF)) + '098') AS INTEGER)) AND ano=ob_sub_ant.ano AND i_boletim = ob_sub_ant.i_boletim),0)
+				                )
+				            )
+				            OR
+				            (
+				                ob_sub_ant.i_item IN ((CAST((string(100 + (IF i_mes > 1 THEN i_mes - 1 ELSE 12 ENDIF)) + '098') AS INTEGER))) AND 
+				               ( 
+				                   isnull((SELECT valor FROM bethadba.opcoes_boletim WHERE i_item = (CAST((string(50  + (IF i_mes > 1 THEN i_mes - 1 ELSE 12 ENDIF)) + '098') AS INTEGER)) AND ano=bethadba.dbf_ano_base(ob_sub_ant.i_boletim,year(today()),(CAST((string(50  + (IF i_mes > 1 THEN i_mes - 1 ELSE 12 ENDIF)) + '098') AS INTEGER)),'opcoes_boletim') AND i_boletim = ob_sub_ant.i_boletim),0) <= 0
+				               )
+				                AND
+				                bethadba.dbf_ano_base(ob_sub_ant.i_boletim,year(today()),(CAST((string(100 + (IF i_mes > 1 THEN i_mes - 1 ELSE 12 ENDIF)) + '098') AS INTEGER)),'opcoes_boletim') = ob_sub_ant.ano
+				            )      
+				     )
+					AND
+					ob_sub.valor >  ob_sub_ant.valor AND
+					ob_sub_rel.i_item = tecbth_delta.dbf_fc_existe_opc_bcl(ob_sub.i_boletim,69001,69009,year(today())) AND
+					tecbth_delta.dbf_fc_existe_opc_bcl(ob_sub.i_boletim,69001,69009,year(today())) = 69007 and
+	        			//ob_sub_rel.valor = ob.valor AND
+					i_mes = d.parcela and
+					((d.parcela > 3 and l.ano >=2012) or (l.ano >2012)))
+FROM 
+	bethadba.opcoes_boletim ob,
+	bethadba.lanctos l,
+	bethadba.debitos d,
+	bethadba.rec_debitos rd,
+WHERE
+	l.i_imoveis = ob.i_boletim AND
+	l.i_lanctos = d.i_lanctos AND
+	rd.i_debitos = d.i_debitos AND
+	ob.i_item = 69007 and//tecbth_delta.dbf_fc_existe_opc_bcl(ob.i_boletim,69001,69009,year(today()))  AND
+	l.i_receitas = 1100 AND
+	l.situacao NOT IN ('C') 
+	//and tecbth_delta.dbf_fc_existe_opc_bcl(ob.i_boletim,69001,69009,year(today())) = 69007 
+GROUP BY
+	l.ano,
+	d.parcela,
+	tecbth_delta.dbf_fc_existe_opc_bcl(ob.i_boletim,69001,69009,year(today()))
+ORDER BY tecbth_delta.dbf_fc_existe_opc_bcl(ob.i_boletim,69001,69009,year(today())),l.ano,d.parcela

@@ -1,0 +1,16 @@
+
+
+SELECT list(distinct(app.usuario_audit)) FROM
+	bethadba.audit_pedidos_processos app,
+	bethadba.lanctos l,
+	bethadba.debitos d,
+	bethadba.rec_debitos rd,
+	bethadba.pedidos_processos pp,
+	bethadba.receitas_rubricas rr
+where
+	l.i_lanctos = d.i_lanctos and
+	d.i_debitos = rd.i_debitos and
+	pp.i_pedidos = l.i_pedidos and
+	app.i_pedidos = pp.i_pedidos and
+	rd.i_receitas = rr.i_receitas and
+	rr.rubrica = 419191000000000

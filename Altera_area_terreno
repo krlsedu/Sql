@@ -1,0 +1,18 @@
+update	
+	bethadba.itbi_cidadao_web icw,
+	bethadba.itbi_opcoes_cidadao_web iocw,
+	bethadba.itbi_opcoes_cidadao_web iocw2,
+	bethadba.itbi_opcoes_cidadao_web iocw3,
+set
+	//iocw.valor = //rea_tot
+	//iocw2.valor = // area_trans
+	//iocw3.texto =  //area_trans
+
+where
+	icw.i_solicitacoes = iocw.i_solicitacoes and
+	icw.i_solicitacoes = iocw2.i_solicitacoes and
+	icw.i_solicitacoes = iocw3.i_solicitacoes and
+	icw.i_itbis = 1931 and
+	iocw3.i_item = 52096 and
+	iocw2.i_item = 50099 and
+	iocw.i_item = 36099;commit

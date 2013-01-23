@@ -1,0 +1,114 @@
+/* -- Fórmula de Lançamento para receita de  1400-ITBI referente Exercício de 2011*/
+%%	w_codigo        ---> Código de referência que está sendo calculado (Imóvel / Econômico / Pedido / Melhoria / etc)
+%%	w_imovel        ---> Código do imóvel no caso de Contribuição de Melhoria
+%%	w_parc_ini      ---> Nº da parcela Inicial 
+%%	w_parc_fin      ---> Nº da parcela Final 
+%%	w_receita       ---> Passa a Receita Principal
+%%	w_ano           ---> Passa o ano que será Calculado
+%%	w_config        ---> Configuração informada na Janela de Calculo
+%%	w_npar          ---> Passa o Número de Parcela a serem geradas, caso não tenha Parâmetros das Parcelas
+%%	w_moeda         ---> Passa o Código da moeda
+%%  w_venc_ini      ---> Vcto Inicial
+%%  w_dias          ---> dias vcto
+%%  w_antecip       ---> Antecipa
+%%  w_simula        ---> Simulado
+%%  w_notifica      ---> Será notificado após a geração
+%%  w_complementa   ---> Complementar
+%%  w_unidade       ---> Unidade   
+
+DECLARE itbi DECIMAL(15,4); 
+DECLARE valor_pago DECIMAL(15,4); 
+DECLARE valor_gerado DECIMAL(15,4);
+DECLARE data CHAR(20);
+DECLARE isencao INTEGER;
+DECLARE motivo INTEGER;    
+DECLARE cod_itbi INTEGER;
+DECLARE cod_ano INTEGER;
+
+
+SET motivo = (SELECT i_motivos FROM 
+                              bethadba.itbi
+                          WHERE 
+                              ano = w_ano AND 
+                              i_itbis = w_codigo); 
+                              
+IF motivo IN (2,4,7,8,9,24,26,58,59,60,61,62,63,99984) THEN
+  SET isencao = 1;
+END IF;
+  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Início
+%% gera guia de itbi com valor a pagar resultante da subtração do valor gerado na retificadora pela retificada.
+%% o número da guia a ser retificada deve ser informado pelo solicitante.
+%% criado em 17/05/2012 técnico responsável Carlos Eduardo 
+SET cod_itbi = isnull((SELECT  max(iocw_num.valor) FROM 
+                  	bethadba.itbi_cidadao_web icw,
+                  	bethadba.itbi_opcoes_cidadao_web iocw_num
+                  WHERE
+                  	icw.i_solicitacoes = iocw_num.i_solicitacoes AND
+                  	iocw_num.i_item = 55098  AND                 	
+                  	icw.i_itbis = w_codigo AND
+                  	icw.ano = w_ano),0);
+SET cod_ano = isnull((SELECT  max(iocw_ano.valor) FROM 
+                  	bethadba.itbi_cidadao_web icw,
+                  	bethadba.itbi_opcoes_cidadao_web iocw_ano,
+                  WHERE
+                  	icw.i_solicitacoes = iocw_ano.i_solicitacoes AND
+                  	iocw_ano.i_item = 56098 AND                    	
+                  	icw.i_itbis = w_codigo AND
+                  	icw.ano = w_ano),0);
+IF motivo = 16 AND cod_itbi <> 0 AND cod_ano <> 0 THEN 
+
+  SET valor_pago = (SELECT sum(p.valor_pago) FROM 
+                      	bethadba.pagtos p,
+                      	bethadba.debitos d,
+                      	bethadba.lanctos l
+                      WHERE
+                      	p.i_debitos = d.i_debitos AND
+                      	l.i_lanctos = d.i_lanctos AND
+                      	p.data_est IS NULL  AND
+                      	l.i_itbis = cod_itbi AND
+                      	l.ano = cod_ano);
+END IF;
+%% Fim
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                
+
+
+SET itbi = (SELECT itbi_final FROM 
+                bethadba.itbi
+            WHERE 
+                ano = w_ano AND 
+                i_itbis = w_codigo);
+SET valor_gerado = itbi - isnull(valor_pago,0);                
+
+SET data = dateformat(dateadd(day, 30, today()), 'yyyyMMdd');
+CALL dbf_fc_upd_calc('w_venc_ini',data);  
+IF valor_gerado <= 0 THEN
+     SET valor_gerado = itbi;
+     SET isencao = 1;
+END IF;
+SET ret = tecbth_delta.itbi_copia_obsweb_to_parecer(w_codigo,w_ano);  
+%% SET ret = tecbth_delta.itbi_altera_situacao(w_codigo,w_ano);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Início altera valor com taxa diferencial
+%% Em caso de motivos de transferência que incida a taxa de 0.5% o valor é ajustado a seguir;
+%% Alterado por solicitação de Ieda Serafin no dia 24/10/2012
+IF motivo IN (67) THEN 
+   SET valor_gerado = (valor_gerado*0.5)/2;
+   SET ret = tecbth_delta.itbi_altera_imp_guias(w_codigo,w_ano);
+END IF;  
+%% Fim altera valor com taxa diferencial
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Gera Receita
+SET ret = dbf_fc_cria_rec(1401,valor_gerado, NULL,isencao, NULL); 
+
+%% Zera imposto que aparece na guia de ITBI, para solicitações isentas;
+IF isencao = 1 THEN
+  SET ret = tecbth_delta.itbi_zera_imp_guias_isentas(w_codigo,w_ano);
+END IF;   
+IF motivo IN (67) THEN
+   SET ret = tecbth_delta.itbi_altera_imp_guias(w_codigo,w_ano);
+END IF; 

@@ -1,0 +1,24 @@
+create variable pessoa integer;
+create variable cnpf varchar;
+create variable prot varchar;
+create variable valor_cred numeric(15,2);
+
+for sql1 as sql2 cursor for 
+					SELECT
+						cpf_cnpj as cnpf,
+						cast(replace(valor_credito,',','.') as numeric(15,2)) as valor_cred,
+						valor_utilizado,
+						protocolo as prot
+					FROM tecbth_delta.creditos_importados
+do
+insert into bethadba.creditos_tomadores values (
+	cnpf,
+	if (SELECT  bethadba.dbf_getCodigoPessoa(cnpf,301)
+ 		FROM dummy) = 0 then null else (SELECT  bethadba.dbf_getCodigoPessoa(cnpf,301)
+ 		FROM dummy) endif,
+	valor_cred,
+	0,
+	prot
+)
+end for;
+commit

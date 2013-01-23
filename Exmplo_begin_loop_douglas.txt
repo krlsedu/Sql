@@ -1,0 +1,15 @@
+begin
+   declare i integer;
+   declare menor integer;
+   declare maior integer;
+   declare cp_tempA integer;
+   declare cp_tempB integer;
+   select min(cod_seq) into menor from tabela;
+   select max(cod_seq) into maior from tabela;
+   set i = menor;
+   while i <= maior  loop
+               select campo1, campo2 into cp_tempA, cp_tempB from tabela where cod_seq = i;
+               update tabela set campo1 = cp_tempB, campo2 = cp_tempA where cod_seq = i;
+               set i = i + 1;
+       end loop;
+end;

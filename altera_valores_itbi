@@ -1,0 +1,23 @@
+update
+	bethadba.itbi_cidadao_web icw,
+	bethadba.itbi_imoveis_cidadao_web iicw,
+	bethadba.itbi it,
+	bethadba.itbi_imoveis iit
+set
+	iicw.valor_financ = 5866.50,
+	iicw.valor_financ_adm = 5866.50,
+	iicw.valor_terreno = 5866.50,
+	iicw.valor_construcao = 0,
+	iicw.valor_declarado = 5866.50,
+	iit.valor_financ = 5866.50,
+	iit.valor_terr = 5866.50,
+	iit.valor_cons = 0,
+	iit.valor_declarado = 5866.50
+where
+	icw.i_solicitacoes = iicw.i_solicitacoes and
+	it.i_itbis = icw.i_itbis and
+	it.ano = icw.ano and
+	iit.i_itbis=it.i_itbis and
+	iit.ano = it.ano and
+	icw.i_itbis is not null and
+	icw.i_solicitacoes in (1798,1862)

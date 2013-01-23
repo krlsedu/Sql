@@ -1,0 +1,20 @@
+update 
+	bethadba.itbi_cidadao_web icw,
+	bethadba.itbi_imoveis_cidadao_web iicw,
+	bethadba.itbi it,
+	bethadba.itbi_imoveis iit
+set
+	iicw.valor_declarado = isnull(iicw.valor_terreno,0) + isnull(iicw.valor_construcao,0),
+	iicw.valor_terreno_adm = isnull(iicw.valor_terreno,0),
+	iicw.valor_construcao_adm = isnull(iicw.valor_construcao,0),
+	iit.valor_terr = isnull(iicw.valor_terreno,0),
+	iit.valor_cons = isnull(iicw.valor_construcao,0),
+	iit.valor_declarado = isnull(iicw.valor_terreno,0) + isnull(iicw.valor_construcao,0)
+where
+	icw.i_solicitacoes = iicw.i_solicitacoes and
+	icw.i_itbis = it.i_itbis and
+	icw.ano = it.ano and
+	it.i_itbis = iit.i_itbis and
+	it.ano = iit.ano and
+	icw.i_motivos = 26 and
+	icw.i_solicitacoes = :solicitacao;commit

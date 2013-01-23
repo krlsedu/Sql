@@ -1,0 +1,46 @@
+                SELECT 
+pessoas.i_pessoas,
+pessoas.nome,
+lan.i_imoveis,
+
+valor_gerado_2011 = (
+                         SELECT                           
+                         rec_debitos.valor_gerado
+                         FROM bethadba.pessoas INNER JOIN bethadba.lanctos 
+                                                         ON pessoas.i_pessoas = lanctos.i_pessoas
+                                               INNER JOIN bethadba.debitos 
+                                                         ON lanctos.i_lanctos = debitos.i_lanctos 
+                                               INNER JOIN bethadba.rec_debitos 
+                                                         ON debitos.i_debitos = rec_debitos.i_debitos
+                           
+                                                        WHERE lanctos.ano = 2011                          
+                                                          AND lanctos.situacao <> 'C' 
+                                                          AND lanctos.i_receitas = 100 
+                                                          AND lanctos.engloba_com = 'N'
+                                                          AND debitos.parcela = 0
+                                                          AND rec_debitos.i_receitas = 101                              
+                                                          AND lanctos.i_imoveis = lan.i_imoveis
+                     ),
+
+rec_debitos.valor_gerado,
+
+diferenca = rec_debitos.valor_gerado - valor_gerado_2011
+
+FROM bethadba.pessoas INNER JOIN bethadba.lanctos AS lan
+                                ON pessoas.i_pessoas = lan.i_pessoas
+                      INNER JOIN bethadba.debitos 
+                                ON lan.i_lanctos = debitos.i_lanctos 
+                      INNER JOIN bethadba.rec_debitos 
+                                ON debitos.i_debitos = rec_debitos.i_debitos
+  
+                               WHERE lan.ano = 2012 
+                                 AND lan.situacao = 'A' 
+                                 AND lan.i_receitas = 100 
+                                 AND lan.engloba_com = 'N'
+                                 AND debitos.parcela = 0
+                                 AND rec_debitos.i_receitas = 101 
+
+                                 ORDER BY pessoas.nome
+                                 
+
+

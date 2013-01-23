@@ -1,0 +1,12 @@
+SELECT p.valor_pago,p.valor_pago - p.valor_juro - p.valor_multa - p.valor_corr,(ap.valor_tributo+ ap.valor_correcao+ ap.valor_juro+ ap.valor_multa) - ( ap.valor_desc_tributo+ ap.valor_desc_correcao + ap.valor_desc_juro + ap.valor_desc_multa),* FROM 
+	bethadba.mov_convenios mc,
+	bethadba.pagtos p,
+	bethadba.acordos_parcelas ap
+	
+where
+	p.i_mov_conv = mc.i_mov_conv and 
+	p.num_parc = ap.num_parc and
+	p.data_est is null and
+	(p.valor_pago - p.valor_juro - p.valor_multa - p.valor_corr) <> ((ap.valor_tributo+ ap.valor_correcao+ ap.valor_juro+ ap.valor_multa) - ( ap.valor_desc_tributo+ ap.valor_desc_correcao + ap.valor_desc_juro + ap.valor_desc_multa)) and
+	p.valor_dif = 0 and
+	mc.nome_arq = 'BB250712.ret'

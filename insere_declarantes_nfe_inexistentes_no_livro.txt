@@ -1,0 +1,12 @@
+insert into bethadba.declarantes (
+		SELECT 4252+number(*),p.i_pessoas,e.i_economicos,'N',e.tipo,null,NULL,'N','N','N' FROM 
+		bethadba.nfe_erros_ocorridos neo,
+		bethadba.pessoas p,
+		bethadba.economicos e
+	where
+		p.i_pessoas = e.i_pessoas and
+		bethadba.dbf_ret_cpf_cnpj(p.i_pessoas,p.tipo_pessoa) = neo.cpf_cnpj and
+		neo.mensagem like '%Não existe um declarante cadastrado para a pessoa com o CPF/CNPJ %' and
+		neo.situacao = 'N'
+		group by p.i_pessoas,e.i_economicos,e.tipo
+)

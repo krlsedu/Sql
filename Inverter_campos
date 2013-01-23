@@ -1,0 +1,28 @@
+begin
+	declare valor_temp integer;
+	SELECT iocw1.valor into valor_temp FROM
+		bethadba.itbi_cidadao_web icw,
+		bethadba.itbi_opcoes_cidadao_web iocw1,
+		bethadba.itbi_opcoes_cidadao_web iocw2,
+	where
+		icw.i_solicitacoes = iocw1.i_solicitacoes and
+		icw.i_solicitacoes = iocw2.i_solicitacoes and
+		icw.i_itbis = :itbi and
+		icw.ano = :iano and
+		iocw1.i_item = 36099 and
+		iocw2.i_item = 50099; 
+	update
+		bethadba.itbi_cidadao_web icw,
+		bethadba.itbi_opcoes_cidadao_web iocw1,
+		bethadba.itbi_opcoes_cidadao_web iocw2,
+	set
+		iocw1.valor = iocw2.valor,
+		iocw2.valor = valor_temp
+	where
+		icw.i_solicitacoes = iocw1.i_solicitacoes and
+		icw.i_solicitacoes = iocw2.i_solicitacoes and
+		icw.i_itbis = :itbi and
+		icw.ano = :iano and
+		iocw1.i_item = 36099 and
+		iocw2.i_item = 50099;commit
+end

@@ -1,0 +1,23 @@
+update
+	bethadba.itbi_cidadao_web icw,
+	bethadba.itbi_imoveis_cidadao_web iicw,
+	bethadba.itbi it,
+	bethadba.itbi_imoveis iit,
+	bethadba.lanctos l,
+	bethadba.rec_lanctos rl
+set
+	it.aliq_normal = 0,
+	it.aliq_outra = 0,
+	it.aliq_financ = 0
+where 
+	icw.i_itbis = it.i_itbis and
+	icw.ano = it.ano and
+	icw.i_itbis = iit.i_itbis and
+	icw.ano = iit.ano and
+	icw.i_solicitacoes = iicw.i_solicitacoes and
+	l.i_itbis = icw.i_itbis and
+	l.ano = icw.ano and
+	l.i_lanctos = rl.i_lanctos and
+	rl.i_isencoes is not null and
+	icw.i_solicitacoes =  :solicitacao
+

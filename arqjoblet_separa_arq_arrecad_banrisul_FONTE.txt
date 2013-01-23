@@ -1,0 +1,81 @@
+ 
+Alfa      @gaConexao, @gaPasta, laReg, laRegSum, nomeArqOr, nomeArqSep, laSelect, laCabecalho, laRodape,laRodapeSep, listaArq, listaArqSep, pastaArqs, pastaArqsSepardos, prefArq,testaSeSeparado ;
+Inteiro   ler,ler2,con,lnNumero, lnCount,lnCountSep,liRetorno,convenio, lnValorLinhas;
+
+@gaPasta = retParametro("Caminho",false,"OF:dir");
+
+pastaArqs = @gaPasta;
+pastaArqs = pastaArqs +"\";
+pastaArqsSepardos = "Separados\";
+
+//cria pasta para os aquivos divididos
+criaPasta(pastaArqs+pastaArqsSepardos,false);
+
+//busca os arquivos a dividir na pasta
+listaArq = listaArquivos(pastaArqs,"","nome");
+vetorAlfa(listaArq,"\|","vetArqs");
+
+lnCount = 1;
+enquanto vetorTamanho("vetArqs") >= lnCount
+        nomeArqOr = vetorDados("vetArqs",lnCount);
+        lnCount +=1;
+        mostraln(" ");
+        mostraln("-------------------------------------------------------------------");
+        mostraln(nomeArqOr);
+        testaSeSeparado = listaArquivos(pastaArqs+pastaArqsSepardos,"*"+nomeArqOr,"nome");
+        se testaSeSeparado != ""
+            mostraln("O arquivo " + nomeArqOr + " já foi dividido anteriormente!");
+        senao
+            ler = leArquivo(pastaArqs+nomeArqOr, "leArq", '');
+            prefArq = pastaArqs+pastaArqsSepardos;
+            se ler == 1 
+                enquanto leProxima("leArq")
+                    laReg = leDados("leArq",1);
+                    se subAlfa(laReg,0,6) == 'BSJI00'             
+                        laCabecalho = laReg;      
+                    fimse;
+                    se subAlfa(laReg,0,6) == 'BSJI20'
+                         laSelect = "SELECT i_convenios FROM bethadba.conta_corrente where cedente = cast(" + subAlfa(laReg,6,4)+"as integer)";
+                         liRetorno = consulta(@gaConexao,'cons', laSelect); 
+                         //editorSQL('cons');
+                         convenio =  consDados('cons',1);                             
+                         se existeArquivo(prefArq+convenio+"_"+nomeArqOr)    
+                            escreveArquivo(prefArq+convenio+"_"+nomeArqOr,laReg,true);        
+                         senao
+                            escreveArquivo(prefArq+convenio+"_"+nomeArqOr,laCabecalho,true);
+                            escreveArquivo(prefArq+convenio+"_"+nomeArqOr,laReg,true);
+                         fimse;
+                    fimse;
+                    se subAlfa(laReg,0,6) == 'BSJI90'             
+                        laRodape = laReg;      
+                    fimse;
+                fimenquanto;
+                listaArqSep = listaArquivos(prefArq,"*"+nomeArqOr,"nome");
+                vetorAlfa(listaArqSep,"\|","vetArqsSep");
+                lnCountSep = 1;
+                enquanto vetorTamanho("vetArqsSep") >= lnCountSep
+                    nomeArqSep = vetorDados("vetArqsSep",lnCountSep);
+                    lnCountSep +=1;
+                    se  existeArquivo(prefArq+nomeArqSep) 
+                        ler2 = leArquivo(prefArq+nomeArqSep, "leArqFim", ''); 
+                        enquanto leProxima("leArqFim")
+                            laRegSum = leDados("leArqFim",1);
+                            se subAlfa(laRegSum,0,6) == 'BSJI20'
+                                lnValorLinhas = lnValorLinhas + (numero(subAlfa(laRegSum, 61,15)));
+                            fimse;
+                        fimenquanto;
+                        
+                        //Altera valor total do arquivo
+                        laRodapeSep = subAlfa(laRodape,0,27)+repete('0',15-tamanho(alfa(lnValorLinhas)))+alfa(lnValorLinhas)+subAlfa(laRodape,42,46);
+                        escreveArquivo(prefArq+nomeArqSep,laRodapeSep,true); 
+                        mostraln("O Arquivo " + nomeArqSep + " foi gerado com sucesso!");
+                        lnValorLinhas = 0;
+                    senao se vetorTamanho("vetArqsSep") == 1
+                            mostraln("O Arquivo "+nomeArqOr+" não contém informacões de Pagamento!");
+                        fimse;
+                    fimse;
+                fimenquanto;                   
+                mostraln("-------------------------------------------------------------------");            
+            fimse;
+        fimse;
+fimenquanto;

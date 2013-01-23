@@ -1,0 +1,56 @@
+/* -- Desconto para Valor do Juros*/
+
+DECLARE sit_div VARCHAR(2);
+DECLARE num_acordo INTEGER;                       
+DECLARE data_max_acordo DATE;
+  
+SET sit_div = (SELECT situacao FROM bethadba.dividas WHERE i_dividas = p_divida);
+
+IF sit_div = 'A' THEN
+       IF  (SELECT i_receitas FROM bethadba.dividas WHERE i_dividas = p_divida) BETWEEN 5100 AND 8300 THEN 
+            SET sit_div = 'p'; 
+            SET data_max_acordo =(SELECT data_vcto FROM bethadba.dividas WHERE i_dividas = p_divida);
+       END IF;
+ELSE IF  sit_div = 'p' THEN
+       SET data_max_acordo = (SELECT DISTINCT(a.data_acordo) FROM 
+                        	bethadba.acordos_dividas adiv,
+                        	bethadba.acordos a
+                        WHERE
+                        	a.i_acordos = adiv.i_acordos AND 
+                        	adiv.i_dividas = p_divida AND
+                        	a.sit_acordo IN ('A','P'));   
+END IF;
+END IF; 
+
+
+IF sit_div = 'p' AND data_max_acordo <='2012-12-31' THEN 
+     IF p_qtd_parc <= 1 THEN
+        SET p_valor_desc = p_valor;
+     ELSE IF p_qtd_parc BETWEEN 2 AND 30 THEN
+        SET p_valor_desc = p_valor *0.2; 
+     ELSE 
+         SET p_valor_desc = 0;
+     END IF;
+     END IF;
+ELSE IF sit_div = 'A' THEN
+      IF p_qtd_parc <= 1 THEN
+        SET p_valor_desc = p_valor;
+      ELSE IF p_qtd_parc BETWEEN 2 AND 6 THEN
+        SET p_valor_desc = p_valor * 0.75;
+      ELSE IF p_qtd_parc BETWEEN 7 AND 12 THEN
+        SET p_valor_desc = p_valor * 0.5;
+      ELSE IF p_qtd_parc BETWEEN 13 AND 18 THEN
+        SET p_valor_desc = p_valor * 0.3; 
+      ELSE IF p_qtd_parc BETWEEN 19 AND 24 THEN
+        SET p_valor_desc = p_valor * 0.2; 
+      ELSE
+        SET p_valor_desc = 0;
+      END IF;
+      END IF;
+      END IF;
+      END IF;
+      END IF; 
+ELSE
+      SET p_valor_desc = 0;        
+END IF;  
+END IF;
