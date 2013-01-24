@@ -1,4 +1,4 @@
- 
+
 Alfa      @gaConexao, @gaPasta, laReg, laRegSum, nomeArqOr, nomeArqSep, laSelect, laCabecalho, laRodape,laRodapeSep, listaArq, listaArqSep, pastaArqs, pastaArqsSepardos, prefArq,testaSeSeparado ;
 Inteiro   ler,ler2,con,lnNumero, lnCount,lnCountSep,liRetorno,convenio, lnValorLinhas;
 
@@ -24,7 +24,7 @@ enquanto vetorTamanho("vetArqs") >= lnCount
         mostraln(nomeArqOr);
         testaSeSeparado = listaArquivos(pastaArqs+pastaArqsSepardos,"*"+nomeArqOr,"nome");
         se testaSeSeparado != ""
-            mostraln("O arquivo " + nomeArqOr + " já foi dividido anteriormente!");
+            mostraln("O arquivo " + nomeArqOr + " jï¿½ foi dividido anteriormente!");
         senao
             ler = leArquivo(pastaArqs+nomeArqOr, "leArq", '');
             prefArq = pastaArqs+pastaArqsSepardos;
@@ -64,14 +64,14 @@ enquanto vetorTamanho("vetArqs") >= lnCount
                                 lnValorLinhas = lnValorLinhas + (numero(subAlfa(laRegSum, 61,15)));
                             fimse;
                         fimenquanto;
-                        
+
                         //Altera valor total do arquivo
                         laRodapeSep = subAlfa(laRodape,0,27)+repete('0',15-tamanho(alfa(lnValorLinhas)))+alfa(lnValorLinhas)+subAlfa(laRodape,42,46);
                         escreveArquivo(prefArq+nomeArqSep,laRodapeSep,true); 
                         mostraln("O Arquivo " + nomeArqSep + " foi gerado com sucesso!");
                         lnValorLinhas = 0;
                     senao se vetorTamanho("vetArqsSep") == 1
-                            mostraln("O Arquivo "+nomeArqOr+" não contém informacões de Pagamento!");
+                            mostraln("O Arquivo "+nomeArqOr+" nï¿½o contï¿½m informacï¿½es de Pagamento!");
                         fimse;
                     fimse;
                 fimenquanto;                   
@@ -79,3 +79,4 @@ enquanto vetorTamanho("vetArqs") >= lnCount
             fimse;
         fimse;
 fimenquanto;
+//fim
