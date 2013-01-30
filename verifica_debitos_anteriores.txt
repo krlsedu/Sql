@@ -1,0 +1,24 @@
+//verifica se há dívidas em aberto para imóveis
+SELECT count() FROM 
+	bethadba.dividas div
+where 
+	div.data_vcto <= '2012-12-31' and 
+	div.situacao = 'A' and
+	div.i_receitas in (SELECT rec.i_receitas FROM bethadba.receitas rec where rec.tipo_receita = 1 and rec.i_receitas like '%00') and
+	div.i_refer = 40249
+
+
+//verifica se há acordos em aberto para imóveis
+SELECT cont() FROM 
+	bethadba.acordos_parcelas ap,
+	bethadba.acordos_dividas adiv,
+	bethadba.dividas div
+where
+	ap.i_acordos = adiv.i_acordos and
+	adiv.i_dividas = div.i_dividas and
+	div.situacao = 'P' and
+	div.i_receitas in (SELECT rec.i_receitas FROM bethadba.receitas rec where rec.tipo_receita = 1 and rec.i_receitas like '%00')and
+	ap.flag = 'A' and
+	ap.data_vcto <= '2012-12-31' and
+	div.i_refer =
+	

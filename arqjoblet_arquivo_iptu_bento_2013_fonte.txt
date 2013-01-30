@@ -1,4 +1,5 @@
 //Revisado em: 24/01/2012 - Emerson Barrufi Fernandes
+//Revisado em: 30/01/2013 - Carlos Eduardo Duarte Schwalm
 
 Alfa @gaConexao, @gaCaminho, @gaContrib, @gaOrdem, @gaRegistro, @gaEndContrib, @gaEngloba,@gaImovel,@gaIsentos,@gaCidade, @gaUnica;
 Inteiro  @giConvenio,@giQtdReg;
@@ -811,24 +812,24 @@ consFecha('Parcelas');
                                                  exists( select 1 from bethadba.rec_lanctos recLanEng key join bethadba.lanctos as lancEng 
                                                  where lancEng.i_lancto_prin = debitos.i_lanctos 
                                                  and recLanEng.i_receitas = rec_debitos.i_receitas and recLanEng.i_isencoes is null))";
+                            liRetorno = consulta(@gaConexao, 'Complemento', laSelect);
+                            
+                            // Trecho para contar quantas receitas há para o imovel
                             laSelectCount = "select count() from bethadba.rec_debitos key join bethadba.debitos 
                              where debitos.i_debitos = "+liDebito + " and 
                                                 (exists( select 1 from bethadba.rec_lanctos where debitos.i_lanctos = rec_lanctos.i_lanctos and rec_lanctos.i_isencoes is null and rec_lanctos.i_receitas = rec_debitos.i_receitas) or 
                                                  exists( select 1 from bethadba.rec_lanctos recLanEng key join bethadba.lanctos as lancEng 
                                                  where lancEng.i_lancto_prin = debitos.i_lanctos 
                                                  and recLanEng.i_receitas = rec_debitos.i_receitas and recLanEng.i_isencoes is null))";
-
-                                                 
-                            liRetorno = consulta(@gaConexao, 'Complemento', laSelect);
                             liRetornoCount = consulta(@gaConexao, 'Complemento_count', laSelectCount);
                             contaSubRec = consDados('Complemento_count', 1);
+                            //fim
                             
                             
                             se laIsento == 'N'
                                 laSelect = "select dbf_ret_montagem_nn_cb_rn( 'C', " +@giConvenio+ " , '" +ldVcto+ "' , " +liParcela+ " , 
                                 '" +laUnica+ "' , " +liAno+ " , " +liNumBaixa+ " , " +lnTotGerado+ " , " +liReceita+ " ) from dummy "; 
                                 liRetorno = consulta(@gaConexao, 'Barra', laSelect);
-                                //editorSQL('Barra');
                                 se liRetorno < 1 
                                     mensagem('consulta', liRetorno, 'finaliza',1);
                                 senao
@@ -850,11 +851,8 @@ consFecha('Parcelas');
                                 fimse;
                                 consFecha('RepNum');
                             fimse;
-                            //mostraln(laBarra);
                             @gaRegistro += formata(laBarra,'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@');
                             @gaRegistro += repete(' ', 5) + formata(laRepNum,'@@@@@@@@@@@ @  @@@@@@@@@@@ @  @@@@@@@@@@@ @  @@@@@@@@@@@ @');
-                           // mostraln(liNumBaixa);
-                            //mostraln(formata(laRepNum,'@@@@@@@@@@@ @  @@@@@@@@@@@ @  @@@@@@@@@@@ @  @@@@@@@@@@@ @'));
                             @gaRegistro += repete (' ',5)+ formata(liNumBaixa,'00000000');
                         fimse;
                             se liRetorno < 1 
@@ -904,7 +902,8 @@ consFecha('Parcelas');
                                     fimse;
                                     
                                     lnValorGer = lnValorGer + lnValorBci;
-                                                                        
+                                    //INICIO
+                                    //trecho aletardo em para que as sub-receitas referentes a Serviços Urbanos fossem agrupadas em um item somente                                    
                                     se liMaxRec < 6
                                         se liSubReceita < 103
                                             laSelect = "select if length(nome) > 35 then abreviatura else nome endif from bethadba.receitas where i_receitas = " +liSubReceita;
@@ -931,14 +930,15 @@ consFecha('Parcelas');
                                                lnValorGerAcu = 0;
                                             fimse;
                                         fimse;
+                                        
                                     fimse;
                                 fimenquanto;
                                 consFecha('Complemento');
                           fimse;
                           se liMaxRec < 6
                                @gaRegistro += repete( ' ', (( 6 - liMaxRec ) * 40) );
-                          fimse;
-                   fimse;
+                          fimse;  //fim das alteraçoes referentes a união das sub-receitas de serviços urbanos
+                   fimse;                
                fimpara;
                     // Área Verde - Desconto Área Verde Item 460/99
                     laSelect = "SELECT isnull(valor,0) FROM bethadba.opcoes_bci 
@@ -956,8 +956,56 @@ consFecha('Parcelas');
                     fimse;
                     consFecha('Verde'); 
 
-                    @gaRegistro += repete(' ',15 - tamanho(retira(formata(lnValorBci,'0.00'))))+ retira(formata(lnValorBci,'0.00')); 
-                                 
+                    @gaRegistro += repete(' ',15 - tamanho(retira(formata(lnValorBci,'0.00'))))+ retira(formata(lnValorBci,'0.00'));
+                    
+                    //INÍCIO MENSAGEM DE VERIFICAÇÃO DE DÉBITOS 
+                    laSelect = "SELECT count() FROM 
+                                	bethadba.dividas div
+                                where 
+                                	div.data_vcto <= '2012-12-31' and 
+                                	div.situacao = 'A' and
+                                	div.i_receitas in (SELECT rec.i_receitas FROM bethadba.receitas rec where rec.tipo_receita = 1 and rec.i_receitas like '%00') and
+                                	div.i_refer = "+liImo;
+                    liRetorno = consulta(@gaConexao,'divida',laSelect);
+                    se liRetorno > 0
+                        se consProxima('divida')
+                            se consDados('divida',1) > 0
+                                mostraln('ATENÇÃO! EXISTEM DÉBITOS ANTERIORES!');
+                                laMensagem = 'ATENÇÃO! EXISTEM DÉBITOS ANTERIORES!';
+                                @gaRegistro += repete(' ',120 - tamanho(laMensagem))+ laMensagem;
+                            senao
+                                laSelect = "SELECT cont() FROM 
+	                                        bethadba.acordos_parcelas ap,
+                                            	bethadba.acordos_dividas adiv,
+                                            	bethadba.dividas div
+                                            where
+                                            	ap.i_acordos = adiv.i_acordos and
+                                            	adiv.i_dividas = div.i_dividas and
+                                            	div.situacao = 'P' and
+                                            	div.i_receitas in (SELECT rec.i_receitas FROM bethadba.receitas rec where rec.tipo_receita = 1 and rec.i_receitas like '%00')and
+                                        	ap.flag = 'A' and
+                                        	ap.data_vcto <= '2012-12-31' and
+                                        	div.i_refer =" + liImo;
+                                  liRetorno = consulta(@gaConexao,'acordos',laSelect);
+                                  se liRetorno > 0
+                                      se consProxima('acordos')
+                                          se consDados('acordos',1) > 0                                                              
+                                              mostraln('ATENÇÃO! EXISTEM DÉBITOS ANTERIORES!');
+                                              laMensagem = 'ATENÇÃO! EXISTEM DÉBITOS ANTERIORES!';
+                                              @gaRegistro += repete(' ',120 - tamanho(laMensagem))+ laMensagem;
+                                          senao
+                                              mostraln('VOCÊ É UM CIDADÃO CONSCIENTE! CONTINUE PAGANDO EM DIA SEU IPTU E AJUDE A FAZER BENTO GONÇALVES UMA CIDADE AINDA MELHOR');
+                                              laMensagem = 'VOCÊ É UM CIDADÃO CONSCIENTE! CONTINUE PAGANDO EM DIA SEU IPTU E AJUDE A FAZER BENTO GONÇALVES UMA CIDADE AINDA MELHOR';
+                                              @gaRegistro += repete(' ',120 - tamanho(laMensagem))+ laMensagem;
+                                          fimse;
+                                      fimse;                                      
+                                  fimse;
+                            fimse;
+                        fimse;
+                    fimse;
+                    consFecha('divida');
+                    consFecha('acordos');
+                    //FIM MENSAGEM DE VERIFICAÇÃO DE DÉBITOS                                  
                escreveArquivo(@gaCaminho,@gaRegistro,true); 
             fimenquanto;
        fimse;
