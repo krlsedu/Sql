@@ -1,0 +1,14 @@
+delete
+    bethadba.debitos_atividades
+where
+    i_atividades = 274 and
+    i_debitos in (select d.i_debitos from 
+                        bethadba.debitos_atividades da,
+                        bethadba.debitos d,
+                        bethadba.lanctos l
+                    where
+                        l.i_lanctos = d.i_lanctos and
+                        d.i_debitos = da.i_debitos and 
+                        l.i_economicos = 8727 and
+                        i_atividades = 274 and
+                        d.parcela = 7);commit

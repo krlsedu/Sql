@@ -1,0 +1,11 @@
+A - Aberto
+P - Parcelado
+E - Eliminado
+T - Transferido
+C - Cancelado
+S - Simulado 
+M - Sem movimento
+F - Em fiscalizaçao
+D - Não utilizado mais
+Q - Quitado
+I - Refis 

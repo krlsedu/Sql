@@ -1,0 +1,33 @@
+
+
+create function tecbth_delta.roda_sql(in a_sql long varchar, in a_user varchar(100) default NULL)
+returns long varchar
+begin
+  declare retorno long varchar;
+  declare agora timestamp;
+  set agora = now();
+  set retorno = 'OK';
+  if not exists(select 1 from bethadba.conexoes_usr where i_entidades = 1 and i_exercicios = year(today(*)) and i_sistema = 301) then
+    insert into bethadba.conexoes_usr values( 1,year(today(*)),301) ;
+    set @@sist_betha_corrente=@@betha_tributos
+  end if;   
+  if not exists (SELECT 1 FROM sys.systable where table_name = 'log_roda_sql') then
+      create table tecbth_delta.log_roda_sql(
+  		usuario varchar(100),
+  		data_hora_exec timestamp NOT NULL DEFAULT current timestamp,
+  		comando long varchar,
+  		resultado long varchar
+  	);
+  end if;
+  set a_sql=replace(a_sql,'&#39;',"CHAR"(39));  
+  BEGIN
+   	execute immediate a_sql;
+   	EXCEPTION WHEN OTHERS THEN
+     SELECT ERRORMSG()
+         INTO retorno;
+  END; 
+  insert into tecbth_delta.log_roda_sql (usuario,data_hora_exec,comando,resultado) values (isnull(a_user,user_name()),agora,a_sql,retorno);	
+  return(retorno);	
+end;
+
+grant execute on tecbth_delta.roda_sql to desbth

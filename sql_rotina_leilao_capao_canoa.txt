@@ -1,0 +1,269 @@
+ALTER FUNCTION tecbth_delta.dbf_transf_imo_leilao(
+                        in "+LiVendedor+" integer,
+                        in "+LiImovel+" integer,
+                        in  "+LaDataArremate+"  date)
+returns smallint
+"begin
+  declare w_imovel integer;
+  declare w_pedido integer;
+  declare w_vendedor integer;
+  declare w_receita_iptu integer;
+  declare w_receita_liminar integer;
+  declare w_debitos integer;
+  declare w_dividas integer;
+  declare w_parcelamentos integer;
+  declare w_engloba_com integer;
+  declare w_update integer;
+
+/*Débitos do Exercício*/
+select isnull(count(l.i_imoveis),0) into w_debitos from bethadba.debitos d, bethadba.lanctos l where
+      d.unica = 'N' and l.i_imoveis = "+LiImovel+" and d.flag = 'A' and
+      (d.data_vcto <  "+LaDataArremate+" ) and l.i_lanctos = d.i_lanctos and
+      (select sum(rl.valor_lanc) from bethadba.rec_lanctos rl where rl.i_lanctos = l.i_lanctos and rl.i_isencoes is null) > 0;
+if w_debitos = 0 then
+  select engloba_com into w_engloba_com from bethadba.imoveis i where i.i_imoveis = "+LiImovel+";
+    if w_engloba_com is not null then
+      select isnull(count(l.i_imoveis),0) into w_debitos from bethadba.debitos d,bethadba.lanctos l where
+             d.unica = 'N' and l.i_imoveis = w_engloba_com and d.flag = 'A' and
+            (d.data_vcto < "+LaDataArremate+") and l.i_lanctos = d.i_lanctos and
+            (select sum(rl.valor_lanc) from bethadba.rec_lanctos rl where
+            rl.i_lanctos = l.i_lanctos and rl.i_isencoes is null) > 0
+    end if;
+end if;
+
+/*Dívidas Ativas*/
+select isnull(count(i_dividas),0) into w_dividas from bethadba.dividas d where
+      d.i_refer = "+LiImovel+" and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and 
+      d.i_receitas = any(select i_receitas from bethadba.receitas where tipo_receita in(1,3) and right(i_receitas,2) = 0);
+
+/*Dívidas Parceladas*/
+select count() into w_parcelamentos from bethadba.dividas,  bethadba.acordos_dividas, bethadba.receitas 
+where dividas.i_refer = "+LiImovel+" and dividas.situacao = 'P' and dividas.i_dividas = acordos_dividas.i_dividas and
+      dividas.i_receitas = receitas.i_receitas and receitas.tipo_receita in (1,3);                       
+
+if(w_debitos > 0) or (w_dividas > 0) or (w_parcelamentos > 0) then
+
+/*Verifica número pedido*/
+select isnull(max(i_pedidos),0) + 1 into w_pedido from bethadba.pedidos_processos;
+
+/*Insere Pedido de Serviço*/
+insert into bethadba.pedidos_processos
+values(w_pedido,
+        "+LiVendedor+",
+       (NULL),
+        1,
+       (NULL),
+        29,
+       (NULL),
+       (NULL),
+       'S',
+       "+LaDataArremate+",
+       "+LaDataArremate+",
+       'O imóvel ' || "+LiImovel+" || ' foi transferido por Leilão Judicial. Data de Arrematação: ' || "+LaDataArremate+" || '.',
+       null);   
+end if;
+
+set w_receita_iptu = 4300;
+set w_receita_liminar = 4500;
+
+/* Altera o Referente e o código da Receita nos Débitos do Exercício*/
+if w_debitos > 0 then
+
+   update bethadba.lanctos l  
+   set i_receitas = w_receita_iptu , i_imoveis = (NULL), i_pedidos = w_pedido
+   where l.i_imoveis = "+LiImovel+" and l.situacao in ('A','P') and l.i_receitas = 100 and
+         l.i_lanctos in (select i_lanctos from bethadba.debitos d where l.i_lanctos = d.i_lanctos and flag = 'A' and d.data_vcto < "+LaDataArremate+");
+
+   update bethadba.lanctos l  
+   set i_receitas = w_receita_liminar, i_imoveis = (NULL), i_pedidos = w_pedido
+   where i_imoveis = "+LiImovel+" and situacao in ('A','P') and l.i_receitas = 1000 and
+         l.i_lanctos in (select i_lanctos from bethadba.debitos d where l.i_lanctos = d.i_lanctos and flag = 'A' and d.data_vcto < "+LaDataArremate+");
+
+   update bethadba.lanctos l, bethadba.debitos d, bethadba.rec_debitos rd, bethadba.rec_lanctos rl
+   set rl.i_receitas = if rl.i_receitas = 101 then 4301 else if rl.i_receitas = 102 then 4302 endif endif, 
+       rd.i_receitas = if rd.i_receitas = 101 then 4301 else if rd.i_receitas = 102 then 4302 endif endif
+   where l.i_receitas = w_receita_iptu and l.i_pedidos = w_pedido and l.situacao in ('A','P') and l.i_lanctos = d.i_lanctos and d.i_debitos = rd.i_debitos and l.i_lanctos = rl.i_lanctos and 
+         l.i_lanctos in (select i_lanctos from bethadba.debitos d where l.i_lanctos = d.i_lanctos and flag = 'A' and d.data_vcto < "+LaDataArremate+");
+   
+   update bethadba.lanctos l, bethadba.debitos d, bethadba.rec_debitos rd, bethadba.rec_lanctos rl
+   set rl.i_receitas = if rl.i_receitas = 1001 then 4501 else if rl.i_receitas = 1002 then 4502 endif endif, 
+       rd.i_receitas = if rd.i_receitas = 1001 then 4501 else if rd.i_receitas = 1002 then 4502 endif endif
+   where l.i_receitas = w_receita_liminar and l.i_pedidos = w_pedido and l.situacao in ('A','P') and l.i_lanctos = d.i_lanctos and d.i_debitos = rd.i_debitos and l.i_lanctos = rl.i_lanctos and 
+         l.i_lanctos in (select i_lanctos from bethadba.debitos d where l.i_lanctos = d.i_lanctos and flag = 'A' and d.data_vcto < "+LaDataArremate+");
+
+   update bethadba.lanctos l, bethadba.debitos d, bethadba.rec_debitos rd, bethadba.pagtos p, bethadba.rec_pagtos rp
+   set rp.i_receitas = if rp.i_receitas = 101 then 4301 else if rp.i_receitas = 102 then 4302 endif endif
+   where l.i_receitas = w_receita_iptu and l.i_pedidos = w_pedido and l.situacao in ('A','P') and l.i_lanctos = d.i_lanctos and d.i_debitos = rd.i_debitos and 
+         p.i_debitos = d.i_debitos and p.i_pagtos = rp.i_pagtos and l.i_lanctos in (select i_lanctos from bethadba.debitos d where l.i_lanctos = d.i_lanctos and flag = 'A' and d.data_vcto < "+LaDataArremate+");
+
+   update bethadba.lanctos l, bethadba.debitos d, bethadba.rec_debitos rd, bethadba.pagtos p, bethadba.rec_pagtos rp
+   set rp.i_receitas = if rp.i_receitas = 1001 then 4501 else if rp.i_receitas = 102 then 4502 endif endif
+   where l.i_receitas = w_receita_liminar and l.i_pedidos = w_pedido and l.situacao in ('A','P') and l.i_lanctos = d.i_lanctos and d.i_debitos = rd.i_debitos and 
+         p.i_debitos = d.i_debitos and p.i_pagtos = rp.i_pagtos and l.i_lanctos in (select i_lanctos from bethadba.debitos d where l.i_lanctos = d.i_lanctos and flag = 'A' and d.data_vcto < "+LaDataArremate+");
+   
+end if;
+
+
+/* Altera as Dívidas Ativas*/
+if w_dividas > 0 then
+
+   /* Altera Referente e Receita */
+   update bethadba.dividas d
+   set d.i_refer = w_pedido, d.i_receitas = w_receita_iptu
+   where d.i_refer = "+LiImovel+" and d.data_vcto < "+LaDataArremate+" and d.situacao = 'A' and d.i_receitas = 100 and 
+         d.i_receitas = any(select i_receitas from bethadba.receitas where tipo_receita in(1,3) and right(i_receitas,2) = 0);
+
+   update bethadba.dividas d
+   set d.i_refer = w_pedido, d.i_receitas = w_receita_liminar
+   where d.i_refer = "+LiImovel+" and d.data_vcto < "+LaDataArremate+" and d.situacao = 'A' and d.i_receitas = 1000 and 
+         d.i_receitas = any(select i_receitas from bethadba.receitas where tipo_receita in(1,3) and right(i_receitas,2) = 0);
+
+   /*Altera Receita na tabela bethadba.canc_acordos*/
+   update bethadba.canc_acordos ca
+   set ca.i_receitas = w_receita_iptu
+   where ca.i_dividas in (select i_dividas from bethadba.dividas d where 
+                          d.i_refer = "+LiImovel+" and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and ca.i_dividas = d.i_dividas and d.i_receitas = 100 and
+                          d.i_receitas = any(select i_receitas from bethadba.receitas where tipo_receita in(1,3) and right(i_receitas,2) = 0));
+
+   update bethadba.canc_acordos ca
+   set ca.i_receitas = w_receita_liminar
+   where ca.i_dividas in (select i_dividas from bethadba.dividas d where 
+                          d.i_refer = "+LiImovel+" and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and ca.i_dividas = d.i_dividas and d.i_receitas = 1000 and
+                          d.i_receitas = any(select i_receitas from bethadba.receitas where tipo_receita in(1,3) and right(i_receitas,2) = 0));
+
+   /*Altera Sub-Receita na tabela bethadba.rec_dividas*/
+   if exists (select 1 from
+                        bethadba.rec_dividas rd key join bethadba.acordos_dividas ad
+                 where rd.i_receitas in (101,102) and rd.i_dividas in (select i_dividas from bethadba.dividas d where d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and d.i_dividas = rd.i_dividas and d.i_receitas = w_receita_iptu)) then
+            call bethadba.pg_setoption('fire_triggers','off');
+            insert into bethadba.rec_dividas 
+                (select rd.i_dividas,if rd.i_receitas = 101 then 4301 else if rd.i_receitas = 102 then 4302 endif endif,rd.valor_orig,rd.valor_cnv,rd.valor_devido,rd.i_classes,rd.tipo_eve
+                 from
+                        bethadba.rec_dividas rd
+                 where rd.i_receitas in (101,102) and rd.i_dividas in (select i_dividas from bethadba.dividas d where d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and d.i_dividas = rd.i_dividas and d.i_receitas = w_receita_iptu));
+           call bethadba.pg_setoption('fire_triggers','on');
+   else
+        update bethadba.rec_dividas rd
+        set i_receitas = if rd.i_receitas = 101 then 4301 else if rd.i_receitas = 102 then 4302 endif endif
+        where rd.i_receitas in (101,102) and rd.i_dividas in (select i_dividas from bethadba.dividas d where d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and d.i_dividas = rd.i_dividas and d.i_receitas = w_receita_iptu);
+   end if;
+   if exists (select 1 from
+                        bethadba.rec_dividas rd key join bethadba.acordos_dividas ad
+                 where rd.i_receitas in (1001,1002) and rd.i_dividas in (select i_dividas from bethadba.dividas d where d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and d.i_dividas = rd.i_dividas and d.i_receitas = w_receita_iptu)) then
+            call bethadba.pg_setoption('fire_triggers','off');
+            insert into bethadba.rec_dividas 
+                (select rd.i_dividas,if rd.i_receitas = 1001 then 4301 else if rd.i_receitas = 1002 then 4302 endif endif,rd.valor_orig,rd.valor_cnv,rd.valor_devido,rd.i_classes,rd.tipo_eve
+                 from
+                        bethadba.rec_dividas rd
+                 where rd.i_receitas in (1001,1002) and rd.i_dividas in (select i_dividas from bethadba.dividas d where d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and d.i_dividas = rd.i_dividas and d.i_receitas = w_receita_iptu));
+           call bethadba.pg_setoption('fire_triggers','on');
+   else
+        update bethadba.rec_dividas rd
+        set i_receitas = if rd.i_receitas = 1001 then 4301 else if rd.i_receitas = 1002 then 4302 endif endif
+        where rd.i_receitas in (1001,1002) and rd.i_dividas in (select i_dividas from bethadba.dividas d where d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and d.i_dividas = rd.i_dividas and d.i_receitas = w_receita_iptu);
+   end if;
+
+   /*Altera Sub-Receita na tabela bethadba.acordos_dividas*/
+    update bethadba.acordos_dividas ad 
+        set i_receitas = if ad.i_receitas = 101 then 4301 else if ad.i_receitas = 102 then 4302 endif endif
+        where ad.i_receitas in (101,102) and ad.i_dividas in (select i_dividas from bethadba.dividas d where d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and d.i_dividas = ad.i_dividas and d.i_receitas = w_receita_iptu);
+   update bethadba.acordos_dividas ad 
+   set i_receitas = if ad.i_receitas = 1001 then 4501 else if ad.i_receitas = 1002 then 4502 endif endif
+   where ad.i_receitas in (1001,1002) and ad.i_dividas in (select i_dividas from bethadba.dividas d where d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and d.i_dividas = ad.i_dividas and d.i_receitas = w_receita_liminar);
+    
+   call bethadba.pg_setoption('fire_triggers','off');
+        delete bethadba.rec_dividas where i_receitas in (101,102) and i_dividas in (select i_dividas from bethadba.dividas d where d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and d.i_dividas = rec_dividas.i_dividas and d.i_receitas = w_receita_iptu);
+        delete bethadba.rec_dividas where i_receitas in (1001,1002) and i_dividas in (select i_dividas from bethadba.dividas d where d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and d.i_dividas = rec_dividas.i_dividas and d.i_receitas = w_receita_liminar);
+   call bethadba.pg_setoption('fire_triggers','on');
+
+end if;
+
+
+/* Altera o Referente e o código da Receita nas Dívidas Parceladas*/
+if w_parcelamentos > 0 then
+
+  /*Altera situação da dívida temporariamente para transferir o referente*/
+  update bethadba.dividas d
+  set d.situacao = 'A'
+  where d.i_refer = "+LiImovel+" and d.data_vcto < "+LaDataArremate+" and d.situacao = 'P' and d.i_receitas = 100 and 
+        d.i_receitas = any(select i_receitas from bethadba.receitas where tipo_receita in(1,3) and right(i_receitas,2) = 0);
+
+  update bethadba.dividas d
+  set d.situacao = 'A'
+  where d.i_refer = "+LiImovel+" and d.data_vcto < "+LaDataArremate+" and d.situacao = 'P' and d.i_receitas = 1000 and 
+        d.i_receitas = any(select i_receitas from bethadba.receitas where tipo_receita in(1,3) and right(i_receitas,2) = 0);
+ 
+
+  /* Altera Referente e Receita */
+  update bethadba.dividas d
+  set d.i_refer = w_pedido, d.i_receitas = w_receita_iptu
+  where d.i_refer = "+LiImovel+" and d.data_vcto < "+LaDataArremate+" and d.situacao = 'A' and d.i_receitas = 100 and 
+         d.i_receitas = any(select i_receitas from bethadba.receitas where tipo_receita in(1,3) and right(i_receitas,2) = 0);
+
+  update bethadba.dividas d
+  set d.i_refer = w_pedido, d.i_receitas = w_receita_liminar
+  where d.i_refer = "+LiImovel+" and d.data_vcto < "+LaDataArremate+" and d.situacao = 'A' and d.i_receitas = 1000 and 
+        d.i_receitas = any(select i_receitas from bethadba.receitas where tipo_receita in(1,3) and right(i_receitas,2) = 0);
+   
+
+  /*Altera Receita na tabela bethadba.canc_acordos*/
+  update bethadba.canc_acordos ca
+  set ca.i_receitas = w_receita_iptu
+  where ca.i_dividas in (select i_dividas from bethadba.dividas d where 
+                          d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and ca.i_dividas = d.i_dividas and d.i_receitas = 100 and
+                          d.i_receitas = any(select i_receitas from bethadba.receitas where tipo_receita in(1,3) and right(i_receitas,2) = 0));
+
+   update bethadba.canc_acordos ca
+   set ca.i_receitas = w_receita_liminar
+   where ca.i_dividas in (select i_dividas from bethadba.dividas d where 
+                          d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and ca.i_dividas = d.i_dividas and d.i_receitas = 1000 and
+                          d.i_receitas = any(select i_receitas from bethadba.receitas where tipo_receita in(1,3) and right(i_receitas,2) = 0));
+
+
+   /*Altera Sub-Receita na tabela bethadba.rec_dividas*/
+   insert into bethadba.rec_dividas
+   select rd.i_dividas, if rd.i_receitas = 101 then 4301 else if rd.i_receitas = 102 then 4302 endif endif, rd.valor_orig, rd.valor_cnv, rd.valor_devido,rd.i_classes,rd.tipo_eve from bethadba.rec_dividas rd 
+   where rd.i_receitas in (101,102) and rd.i_dividas in (select i_dividas from bethadba.dividas d where d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and d.i_dividas = rd.i_dividas and d.i_receitas = w_receita_iptu);
+
+   insert into bethadba.rec_dividas
+   select rd.i_dividas, if rd.i_receitas = 1001 then 4501 else if rd.i_receitas = 1002 then 4502 endif endif, rd.valor_orig, rd.valor_cnv, rd.valor_devido,rd.i_classes,rd.tipo_eve from bethadba.rec_dividas rd 
+   where rd.i_receitas in (1001,1002) and rd.i_dividas in (select i_dividas from bethadba.dividas d where d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and d.i_dividas = rd.i_dividas and d.i_receitas = w_receita_liminar);
+
+   /*Altera Sub-Receita na tabela bethadba.acordos_dividas*/
+   update bethadba.acordos_dividas ad 
+   set i_receitas = if ad.i_receitas = 101 then 4301 else if ad.i_receitas = 102 then 4302 endif endif
+   where ad.i_receitas in (101,102) and ad.i_dividas in (select i_dividas from bethadba.dividas d where d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and d.i_dividas = ad.i_dividas and d.i_receitas = w_receita_iptu);
+ 
+   update bethadba.acordos_dividas ad 
+   set i_receitas = if ad.i_receitas = 1001 then 4501 else if ad.i_receitas = 1002 then 4502 endif endif
+   where ad.i_receitas in (1001,1002) and ad.i_dividas in (select i_dividas from bethadba.dividas d where d.i_refer = w_pedido and (d.data_vcto < "+LaDataArremate+") and d.situacao = 'A' and d.i_dividas = ad.i_dividas and d.i_receitas = w_receita_liminar);
+  
+   /*Altera situação da dívida temporariamente para transferir o referente*/
+   update bethadba.dividas d
+   set d.situacao = 'P'
+   where d.i_refer = w_pedido and d.data_vcto < "+LaDataArremate+" and d.situacao = 'A' and d.i_receitas = 4300;
+         
+   update bethadba.dividas d
+   set d.situacao = 'P'
+   where d.i_refer = w_pedido and d.data_vcto < "+LaDataArremate+" and d.situacao = 'A' and d.i_receitas = 4500;       
+
+
+   /* Altera Pagamento efetuados para o acordo*/
+   update bethadba.pagtos p, bethadba.rec_pagtos rp
+   set rp.i_receitas = if rp.i_receitas = 101 then 4301 else if rp.i_receitas = 102 then 4302 endif endif
+   where rp.i_pagtos = p.i_pagtos and 
+      p.num_parc in (select num_parc from bethadba.acordos_parcelas ap where ap.num_parc = p.num_parc and 
+      ap.i_acordos in (select i_acordos from bethadba.acordos_dividas ad where ad.i_acordos = ap.i_acordos and 
+      ad.i_dividas in (select i_dividas from bethadba.dividas d where d.i_dividas = ad.i_dividas and 
+      d.i_refer = w_pedido and (d.data_vcto <  "+LaDataArremate+") and d.situacao = 'P' and d.i_receitas = 4300)));  
+
+   update bethadba.pagtos p, bethadba.rec_pagtos rp
+   set rp.i_receitas = if rp.i_receitas = 1001 then 4501 else if rp.i_receitas = 1002 then 4502 endif endif
+   where rp.i_pagtos = p.i_pagtos and 
+      p.num_parc in (select num_parc from bethadba.acordos_parcelas ap where ap.num_parc = p.num_parc and 
+      ap.i_acordos in (select i_acordos from bethadba.acordos_dividas ad where ad.i_acordos = ap.i_acordos and 
+      ad.i_dividas in (select i_dividas from bethadba.dividas d where d.i_dividas = ad.i_dividas and 
+      d.i_refer = w_pedido and (d.data_vcto <  "+LaDataArremate+") and d.situacao = 'P' and d.i_receitas = 4500)));
+
+end if;
+end"

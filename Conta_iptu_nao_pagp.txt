@@ -1,0 +1,22 @@
+
+SELECT * FROM
+	bethadba.lanctos l,
+	bethadba.debitos d
+where
+	l.i_lanctos = d.i_lanctos and
+	d.parcela = 0 and
+	l.ano = 2013 and
+	l.i_receitas = 100 and
+	l.i_lanctos not in (SELECT l.i_lanctos FROM 
+						bethadba.lanctos l,
+						bethadba.debitos d,
+						bethadba.pagtos p
+					where
+						l.i_lanctos = d.i_lanctos and
+						d.i_debitos = p.i_debitos and
+						d.parcela = 0 and
+						l.ano = 2013 and
+						l.i_receitas = 100) and
+	exists(SELECT 1 FROM bethadba.rec_lanctos where i_lanctos = l.i_lanctos and i_isencoes is null )
+	
+	

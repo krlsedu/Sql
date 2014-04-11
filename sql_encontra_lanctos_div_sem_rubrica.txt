@@ -1,0 +1,72 @@
+SELECT 
+	r.i_receitas,
+	r.nome,
+	tipo = 'Dívida',
+	lanctos_div = count(d.i_dividas), 
+	acrescimo = (SELECT list(if rrs.tipo_rubrica = 'V' then 'Valor ' else if rrs.tipo_rubrica = 'C' then 'Corr. ' else if rrs.tipo_rubrica = 'M' then 'Mult. ' else if rrs.tipo_rubrica = 'J' then 'Jur. ' else if rrs.tipo_rubrica = 'D' then 'Val. Div. ' else if rrs.tipo_rubrica = 'O' then 'Cor. Div. ' else if rrs.tipo_rubrica = 'L' then 'Mul. Div. ' else if rrs.tipo_rubrica = 'U' then 'Jur. Div ' endif endif endif endif endif endif endif endif ) FROM bethadba.receitas_rubricas rrs where rrs.i_receitas = r.i_receitas and rrs.ano = 2013 and rrs.forma_contabilizacao = 'A'),
+	renuncia = (SELECT list(if rrs.tipo_rubrica = 'V' then 'Valor ' else if rrs.tipo_rubrica = 'C' then 'Corr. ' else if rrs.tipo_rubrica = 'M' then 'Mult. ' else if rrs.tipo_rubrica = 'J' then 'Jur. ' else if rrs.tipo_rubrica = 'D' then 'Val. Div. ' else if rrs.tipo_rubrica = 'O' then 'Cor. Div. ' else if rrs.tipo_rubrica = 'L' then 'Mul. Div. ' else if rrs.tipo_rubrica = 'U' then 'Jur. Div ' endif endif endif endif endif endif endif endif ) FROM bethadba.receitas_rubricas rrs where rrs.i_receitas = r.i_receitas and rrs.ano = 2013 and rrs.forma_contabilizacao = 'R'),
+	desconto = ''
+FROM 
+	bethadba.dividas d,
+	bethadba.rec_dividas rd,
+	bethadba.receitas r
+left join
+	bethadba.receitas_rubricas rr
+on 
+	r.i_receitas = rr.i_receitas and (rr.tipo_rubrica = 'D') and rr.ano = 2013
+left join
+	bethadba.receitas_rubricas rr2
+on 
+	r.i_receitas = rr2.i_receitas and (rr2.tipo_rubrica = 'O') and rr2.ano = 2013
+left join
+	bethadba.receitas_rubricas rr3
+on 
+	r.i_receitas = rr3.i_receitas and (rr3.tipo_rubrica = 'U') and rr3.ano = 2013
+left join
+	bethadba.receitas_rubricas rr4
+on 
+	r.i_receitas = rr4.i_receitas and (rr4.tipo_rubrica = 'L') and rr4.ano = 2013		
+where
+	d.i_dividas = rd.i_dividas and
+	rd.i_receitas = r.i_receitas and
+	(rr.i_receitas is null or rr2.i_receitas is null or rr3.i_receitas is null or rr4.i_receitas is null) and
+	right(r.i_receitas,2) <> 0 and
+	d.situacao in ('A','I','P')
+group by r.i_receitas,r.nome
+UNION 
+SELECT 
+	r.i_receitas,
+	r.nome,
+	tipo = 'Lançamento',
+	lanctos_div = count(l.i_lanctos), 
+	acrescimo = (SELECT list(if rrs.tipo_rubrica = 'V' then 'Valor ' else if rrs.tipo_rubrica = 'C' then 'Corr. ' else if rrs.tipo_rubrica = 'M' then 'Mult. ' else if rrs.tipo_rubrica = 'J' then 'Jur. ' else if rrs.tipo_rubrica = 'D' then 'Val. Div. ' else if rrs.tipo_rubrica = 'O' then 'Cor. Div. ' else if rrs.tipo_rubrica = 'L' then 'Mul. Div. ' else if rrs.tipo_rubrica = 'U' then 'Jur. Div ' endif endif endif endif endif endif endif endif ) FROM bethadba.receitas_rubricas rrs where rrs.i_receitas = r.i_receitas and rrs.ano = 2013 and rrs.forma_contabilizacao = 'A'),
+	renuncia = '',
+	desconto = (SELECT list(if rrs.tipo_rubrica = 'V' then 'Valor ' else if rrs.tipo_rubrica = 'C' then 'Corr. ' else if rrs.tipo_rubrica = 'M' then 'Mult. ' else if rrs.tipo_rubrica = 'J' then 'Jur. ' else if rrs.tipo_rubrica = 'D' then 'Val. Div. ' else if rrs.tipo_rubrica = 'O' then 'Cor. Div. ' else if rrs.tipo_rubrica = 'L' then 'Mul. Div. ' else if rrs.tipo_rubrica = 'U' then 'Jur. Div ' endif endif endif endif endif endif endif endif ) FROM bethadba.receitas_rubricas rrs where rrs.i_receitas = r.i_receitas and rrs.ano = 2013 and rrs.forma_contabilizacao = 'D')
+FROM 
+	bethadba.lanctos l,
+	bethadba.rec_lanctos rl,
+	bethadba.receitas r
+left join
+	bethadba.receitas_rubricas rr
+on 
+	r.i_receitas = rr.i_receitas and (rr.tipo_rubrica = 'V') and rr.ano = 2013
+left join
+	bethadba.receitas_rubricas rr2
+on 
+	r.i_receitas = rr2.i_receitas and (rr2.tipo_rubrica = 'C') and rr2.ano = 2013
+left join
+	bethadba.receitas_rubricas rr3
+on 
+	r.i_receitas = rr3.i_receitas and (rr3.tipo_rubrica = 'M') and rr3.ano = 2013
+left join
+	bethadba.receitas_rubricas rr4
+on 
+	r.i_receitas = rr4.i_receitas and (rr4.tipo_rubrica = 'J') and rr4.ano = 2013		
+where
+	l.i_lanctos = rl.i_lanctos and
+	rl.i_receitas = r.i_receitas and
+	(rr.i_receitas is null or rr2.i_receitas is null or rr3.i_receitas is null or rr4.i_receitas is null) and
+	right(r.i_receitas,2) <> 0 and
+	l.situacao in ('A','I','P')
+group by r.i_receitas,r.nome
+order by 1

@@ -1,0 +1,17 @@
+ALTER FUNCTION "tecbth_delta"."dbf_insert_num_baixa_arq_unific"(	
+						a_num_baixas integer,
+						a_taxa_exp char(15),
+						aParcela char(5), 
+						a_divida integer,
+						a_data_vcto char(10),
+						a_num_baixa_conv char(50),
+						a_nosso_numero char(25),
+						a_valor_guia numeric (15,2),
+						a_data_emissao char(10)
+			)
+returns long varchar
+begin
+	INSERT INTO "bethadba"."numeros_baixas" ( "i_num_baixas" , "taxa_exp" , "num_baixa_conv", "parcela" , "i_dividas" , "i_sistema" , "data_vcto", "nosso_numero", "valor_guia", "data_emissao" ) 
+	VALUES ( a_num_baixas , a_taxa_exp, a_num_baixa_conv, aParcela , a_divida , 301 , a_data_vcto, a_nosso_numero, a_valor_guia, a_data_emissao );
+	return  (a_num_baixa_conv);
+end

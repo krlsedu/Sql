@@ -1,0 +1,7 @@
+
+for sql1 as sql2 cursor for 
+
+do
+
+end for;
+commit

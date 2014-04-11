@@ -1,0 +1,9 @@
+Tipo da Rubrica( 
+V-Valor, 
+C-Correção,
+J-Juros,
+M-Multa,
+D-Dívida, 
+O-Correção de Dívida,
+U-Juros de Dívida,
+L-Multa de Dívida)

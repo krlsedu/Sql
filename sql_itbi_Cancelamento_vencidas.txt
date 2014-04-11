@@ -1,22 +1,25 @@
-update
-    bethadba.lanctos l,
-    bethadba.debitos d,
-    bethadba.itbi it,
-    bethadba.itbi_cidadao_web icw
-set
+create function tecbth_delta.dbf_cancela_itbi_vencido(in p_dias integer)
+returns integer
+begin
+  update
+    bethadba.lanctos as l,
+    bethadba.debitos as d,
+    bethadba.itbi as it,
+    bethadba.itbi_cidadao_web as icw set
     l.situacao = 'C',
     d.flag = 'C',
     it.situacao = 'C',
-    it.comentario = 'Cancelado automaticamente devido a estar vencido por mais de 30 dias. comentário original: '+it.comentario ,
+    it.comentario = 'Cancelado automaticamente devido a estar vencido por mais de '+string(p_dias)+' dias. Comentário original: '+it.comentario,
     icw.situacao = 'I',
-    icw.parecer = 'Cancelado automaticamente devido a estar vencido por mais de 30 dias.'
-where
+    icw.parecer = 'Cancelado automaticamente devido a estar vencido por mais de '+string(p_dias)+' dias. Parecer original: '+icw.parecer where
     l.i_lanctos = d.i_lanctos and
     l.i_itbis = it.i_itbis and
     l.ano = it.ano and
     l.i_itbis = icw.i_itbis and
     l.ano = icw.ano and
-    not exists (select * from bethadba.rec_lanctos rl where rl.i_lanctos =  l.i_lanctos and rl.i_isencoes is not null) and
+    not exists(select * from bethadba.rec_lanctos as rl where rl.i_lanctos = l.i_lanctos and rl.i_isencoes is not null) and
     d.flag = 'A' and
     it.situacao <> 'T' and
-    d.data_vcto < dateadd(day,-30,today())
+    d.data_vcto < dateadd(day,-(p_dias),today(*));
+  commit work
+end

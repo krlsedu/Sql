@@ -1,0 +1,7 @@
+not exists (SELECT 1 FROM 
+    				bethadba.alt_ativ a1 
+				where 
+					a1.i_atividades = ea.i_atividades and 
+					a1.i_economicos = ea.i_economicos and 
+					a1.data_alt = (SELECT max(data_alt) FROM bethadba.alt_ativ a2 where a2.i_atividades = ea.i_atividades and a2.i_economicos = ea.i_economicos)
+					and em_ativ = 'N')

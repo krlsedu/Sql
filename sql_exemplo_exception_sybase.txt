@@ -1,0 +1,24 @@
+BEGIN
+
+   DECLARE @sqlcode   INTEGER;
+   DECLARE @sqlstate  VARCHAR ( 5 );
+   DECLARE @errormsg  VARCHAR ( 32767 );
+
+   -- code outside the scope of the exception handler
+
+   BEGIN
+
+      -- code which will have exceptions handled
+
+   EXCEPTION WHEN OTHERS THEN
+
+      SELECT SQLCODE, SQLSTATE, ERRORMSG()
+         INTO @sqlcode, @sqlstate, @errormsg;
+
+      -- optional code: further processing, etc.
+
+   END;
+
+   -- code that can check if an exception occurred
+
+END;

@@ -1,0 +1,9 @@
+SELECT 
+	* 
+FROM 
+	bethadba.alt_ativ aa
+where
+	aa.i_economicos = cod_economico and
+	aa.em_ativ = 'S' and
+	aa.data_alt = (select max(aa2.data_alt) from bethadba.alt_ativ aa2 where aa2.i_economicos = aa.i_economicos and aa2.em_ativ = 'S' and aa2.i_atividades = aa.i_atividades) and
+	not exists (SELECT 1 FROM bethadba.alt_ativ a1 where a1.i_atividades = aa.i_atividades and a1.i_economicos = aa.i_economicos and a1.data_alt = (SELECT max(data_alt) FROM bethadba.alt_ativ a2 where a2.i_atividades = aa.i_atividades and a2.i_economicos = aa.i_economicos) and em_ativ = 'N')

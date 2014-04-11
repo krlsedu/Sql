@@ -1,0 +1,3 @@
+call bethadba.pg_setoption('fire_triggers','off')
+
+call bethadba.pg_setoption('fire_triggers','on')

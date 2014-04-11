@@ -1,0 +1,28 @@
+set p_n_pessoas = 116781;
+set p_pessoas = 94514;
+for sql1 as sql2 cursor for 
+    SELECT 
+        ano as p_ano,
+        i_item as p_item,
+        valor as p_valor,
+        data_bcc as p_data_bcc,
+        texto as p_texto,
+        hora as p_hora
+    FROM bethadba.opcoes_bcc where i_pessoas = p_pessoas
+do
+    if exists (select 1 from bethadba.opcoes_bcc where ano = p_ano and i_pessoas = p_n_pessoas and i_item = p_item) then
+        update 
+            bethadba.opcoes_bcc 
+        set 
+            valor = p_valor,
+            data_bcc = p_data_bcc,
+            texto = p_texto,
+            hora = p_hora
+        where 
+            ano = p_ano and 
+            i_pessoas = p_n_pessoas and 
+            i_item = p_item;
+    else
+        insert into bethadba.opcoes_bcc (ano,i_pessoas,i_item,valor,data_bcc,texto,hora)values(p_ano, p_n_pessoas, p_item, p_valor, p_data_bcc,p_texto, p_hora);
+    end if;
+end for;

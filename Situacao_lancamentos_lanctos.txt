@@ -1,0 +1,9 @@
+A - Aberto
+P - Parcialmente Pago
+Q - Quitado
+C - Cancelado
+S - Simulado
+T - Transferido
+U - Suspenso
+I - Parcelado no Refis
+R - Quitado pelo parcelamento no Refis

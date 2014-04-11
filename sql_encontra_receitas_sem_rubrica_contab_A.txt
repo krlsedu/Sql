@@ -1,0 +1,45 @@
+SELECT 
+	r.i_receitas,
+	r.nome,
+	acrescimo = (SELECT list(if rrs.tipo_rubrica = 'V' then 'Valor ' else if rrs.tipo_rubrica = 'C' then 'Corr. ' else if rrs.tipo_rubrica = 'M' then 'Mult. ' else if rrs.tipo_rubrica = 'J' then 'Jur. ' else if rrs.tipo_rubrica = 'D' then 'Val. Div. ' else if rrs.tipo_rubrica = 'O' then 'Cor. Div. ' else if rrs.tipo_rubrica = 'L' then 'Mul. Div. ' else if rrs.tipo_rubrica = 'U' then 'Jur. Div ' endif endif endif endif endif endif endif endif ) FROM bethadba.receitas_rubricas rrs where rrs.i_receitas = r.i_receitas and rrs.ano = 2013 and rrs.forma_contabilizacao = 'A'),
+	renuncia = (SELECT list(if rrs.tipo_rubrica = 'V' then 'Valor ' else if rrs.tipo_rubrica = 'C' then 'Corr. ' else if rrs.tipo_rubrica = 'M' then 'Mult. ' else if rrs.tipo_rubrica = 'J' then 'Jur. ' else if rrs.tipo_rubrica = 'D' then 'Val. Div. ' else if rrs.tipo_rubrica = 'O' then 'Cor. Div. ' else if rrs.tipo_rubrica = 'L' then 'Mul. Div. ' else if rrs.tipo_rubrica = 'U' then 'Jur. Div ' endif endif endif endif endif endif endif endif ) FROM bethadba.receitas_rubricas rrs where rrs.i_receitas = r.i_receitas and rrs.ano = 2013 and rrs.forma_contabilizacao = 'R'),
+	desconto = (SELECT list(if rrs.tipo_rubrica = 'V' then 'Valor ' else if rrs.tipo_rubrica = 'C' then 'Corr. ' else if rrs.tipo_rubrica = 'M' then 'Mult. ' else if rrs.tipo_rubrica = 'J' then 'Jur. ' else if rrs.tipo_rubrica = 'D' then 'Val. Div. ' else if rrs.tipo_rubrica = 'O' then 'Cor. Div. ' else if rrs.tipo_rubrica = 'L' then 'Mul. Div. ' else if rrs.tipo_rubrica = 'U' then 'Jur. Div ' endif endif endif endif endif endif endif endif ) FROM bethadba.receitas_rubricas rrs where rrs.i_receitas = r.i_receitas and rrs.ano = 2013 and rrs.forma_contabilizacao = 'D')
+FROM 
+	bethadba.receitas r
+left join
+	bethadba.receitas_rubricas rr
+on 
+	r.i_receitas = rr.i_receitas and (rr.tipo_rubrica = 'D') and rr.ano = 2013
+left join
+	bethadba.receitas_rubricas rr2
+on 
+	r.i_receitas = rr2.i_receitas and (rr2.tipo_rubrica = 'O') and rr2.ano = 2013
+left join
+	bethadba.receitas_rubricas rr3
+on 
+	r.i_receitas = rr3.i_receitas and (rr3.tipo_rubrica = 'U') and rr3.ano = 2013
+left join
+	bethadba.receitas_rubricas rr4
+on 
+	r.i_receitas = rr4.i_receitas and (rr4.tipo_rubrica = 'L') and rr4.ano = 2013	
+left join
+	bethadba.receitas_rubricas rr5
+on 
+	r.i_receitas = rr5.i_receitas and (rr5.tipo_rubrica = 'V') and rr5.ano = 2013
+left join
+	bethadba.receitas_rubricas rr6
+on 
+	r.i_receitas = rr6.i_receitas and (rr6.tipo_rubrica = 'C') and rr6.ano = 2013
+left join
+	bethadba.receitas_rubricas rr7
+on 
+	r.i_receitas = rr7.i_receitas and (rr7.tipo_rubrica = 'J') and rr7.ano = 2013
+left join
+	bethadba.receitas_rubricas rr8
+on 
+	r.i_receitas = rr8.i_receitas and (rr8.tipo_rubrica = 'M') and rr8.ano = 2013			
+where
+	(rr.i_receitas is null or rr2.i_receitas is null or rr3.i_receitas is null or rr4.i_receitas is null or rr5.i_receitas is null or rr6.i_receitas is null or rr7.i_receitas is null or rr8.i_receitas is null) and
+	right(r.i_receitas,2) <> 0 
+group by r.i_receitas,r.nome
+order by r.i_receitas

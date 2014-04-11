@@ -1,0 +1,8 @@
+select p.i_pessoas+4,p.nome,if pe.i_ruas is not null then (select nome from bethadba.ruas where i_ruas = pe.i_ruas) else pe.nome_rua endif,pe.numero,pe.complemento,if pe.i_bairros is not null then (select nome from bethadba.bairros where i_bairros = pe.i_bairros) else pe.nome_bairro endif,pe.cep,pe.i_cidades,p.telefone,p.fax,p.email,0,pf.num_pis,pf.carteira_prof,pf.serie_cart,pf.uf_emis_carteira,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL from
+    bethadba.pessoas_fisicas pf,
+    bethadba.pessoas_enderecos pe,
+    bethadba.pessoas p
+where   
+    pe.i_pessoas = pf.i_pessoas and
+    p.i_pessoas = pf.i_pessoas
+order by p.i_pessoas; output to F:\delta\nes\pessoas.txt

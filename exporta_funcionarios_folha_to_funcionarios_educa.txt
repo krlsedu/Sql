@@ -1,0 +1,57 @@
+select 
+    number(),
+    p.i_pessoas+4,
+    pf.rg,
+    pf.num_pis,
+    pf.cpf,
+    p.nome,
+    null,
+    null,
+    null,
+    pf.dt_nascimento,
+    if pf.sexo = 'M' then 1 else 2 endif,
+    null,
+    null,
+    0,
+    null,
+    null,
+    pe.i_cidades,
+    null,
+    pf.uf_emis_rg,
+    pf.dt_emis_rg,
+    null,
+    null,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    null,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    null,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    null,
+    null
+from
+    bethadba.pessoas_fisicas pf,
+    bethadba.pessoas_enderecos pe,
+    bethadba.pessoas p
+where   
+    pe.i_pessoas = pf.i_pessoas and
+    p.i_pessoas = pf.i_pessoas
+order by p.i_pessoas; output to F:\delta\nes\funcionarios.txt
+
+

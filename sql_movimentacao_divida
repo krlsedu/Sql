@@ -1,0 +1,136 @@
+SELECT 
+	abrev_movto          = 'SLI',
+	desc_movimento       = 'Saldo inicial',
+	div.i_receitas,
+	ordem                = -1,
+	tipo_movimento       = 'X', 
+	desc_rec             = (SELECT nome FROM bethadba.receitas rec WHERE rec.i_receitas = div.i_receitas),
+	data_efeito_calc	   = :data_inicial,
+	valor_mov_divida     = 0,
+	valor_mov_corr       = 0,
+	valor_mov_juro       = 0,
+	valor_mov_mult       = 0,
+	valor_inicial_divida = sum(LDTI.valor_divida),
+	valor_final_divida   = 0,
+	valor_inicial_corr   = sum(LDTI.Parc_valor_correcao),
+	valor_final_corr     = 0,
+	valor_inicial_juro   = sum(LDTI.Parc_valor_juros),
+	valor_final_juro     = 0,
+	valor_inicial_mult   = sum(LDTI.Parc_valor_multa),
+	valor_final_mult     = 0,
+	valor_pagamneto      = 0,
+  valor_dif_pagamneto  = 0
+FROM 
+	bethadba.rec_dividas rdiv,
+	bethadba.dividas div,
+	LATERAL( bethadba.dbp_historico_dividas( rdiv.i_dividas, rdiv.i_receitas, :data_inicial )) LDTI 
+WHERE
+	rdiv.i_dividas = div.i_dividas AND
+	EXISTS (SELECT 1 FROM bethadba.encerramentos_tributos et WHERE et.mes_encerrado >= :data_final AND et.data_reabertura IS NULL)
+GROUP BY
+	div.i_receitas
+UNION ALL
+SELECT 
+	abrev_movto          = 'SLF',
+	desc_movimento       = 'Saldo Final',
+	div.i_receitas,
+	ordem                = 4,
+	tipo_movimento       = 'X', 
+	desc_rec             = (SELECT nome FROM bethadba.receitas rec WHERE rec.i_receitas = div.i_receitas),
+	data_efeito_calc	   = :data_inicial,
+	valor_mov_divida     = 0,
+	valor_mov_corr       = 0,
+	valor_mov_juro       = 0,
+	valor_mov_mult       = 0,
+	valor_inicial_divida = 0,
+	valor_final_divida   = sum(LDTF.valor_divida),
+	valor_inicial_corr   = 0,
+	valor_final_corr     = sum(LDTF.Parc_valor_correcao),
+	valor_inicial_juro   = 0,
+	valor_final_juro     = sum(LDTF.Parc_valor_juros),
+	valor_inicial_mult   = 0,
+	valor_final_mult     = sum(LDTF.Parc_valor_multa),
+	valor_pagamneto      = 0,
+  valor_dif_pagamneto  = 0
+FROM 
+	bethadba.rec_dividas rdiv,
+	bethadba.dividas div,
+	LATERAL( bethadba.dbp_historico_dividas( rdiv.i_dividas, rdiv.i_receitas, :data_final )) LDTF 
+WHERE
+	rdiv.i_dividas = div.i_dividas  AND
+	EXISTS (SELECT 1 FROM bethadba.encerramentos_tributos et WHERE et.mes_encerrado >= :data_final AND et.data_reabertura IS NULL)
+GROUP BY
+	div.i_receitas 
+UNION ALL
+SELECT 
+	abrev_movto          = vwmd.tipo_movto,
+	desc_movimento       = list(DISTINCT(vwmd.descricao_movto)),
+	div.i_receitas,
+	ordem                = IF tipo_movimento = 'D' THEN 2 ELSE IF tipo_movimento = 'X' THEN 1 ELSE 0 ENDIF ENDIF,
+	tipo_movimento       = list(DISTINCT(vwmd.altera_valor)), 
+	desc_rec             = (SELECT nome FROM bethadba.receitas rec WHERE rec.i_receitas = div.i_receitas),
+	data_efeito_calc	   = :data_final,
+	valor_mov_divida     = IF tipo_movimento = 'D' THEN sum(vwmd.valor_movto_tributo)*(-1) ELSE sum(vwmd.valor_movto_tributo) ENDIF,
+	valor_mov_corr       = IF tipo_movimento = 'D' THEN sum(vwmd.valor_movto_correcao)*(-1) ELSE sum(vwmd.valor_movto_correcao) ENDIF,
+	valor_mov_juro       = IF tipo_movimento = 'D' THEN sum(vwmd.valor_movto_juros)*(-1) ELSE sum(vwmd.valor_movto_juros) ENDIF,
+	valor_mov_mult       = IF tipo_movimento = 'D' THEN sum(vwmd.valor_movto_multa)*(-1) ELSE sum(vwmd.valor_movto_multa) ENDIF,
+	valor_inicial_divida = 0,
+	valor_final_divida   = 0,
+	valor_inicial_corr   = 0,
+	valor_final_corr     = 0,
+	valor_inicial_juro   = 0,
+	valor_final_juro     = 0,
+	valor_inicial_mult   = 0,
+	valor_final_mult     = 0,
+	valor_pagamneto      = 0,
+  valor_dif_pagamneto  = 0
+FROM 
+	bethadba.vw_movto_dividas_ativas vwmd,
+	bethadba.dividas div
+WHERE
+	vwmd.i_dividas = div.i_dividas AND
+	vwmd.data_efeito BETWEEN :data_inicial AND :data_final AND
+	EXISTS (SELECT 1 FROM bethadba.encerramentos_tributos et WHERE et.mes_encerrado >= :data_final AND et.data_reabertura IS NULL)
+GROUP BY
+	div.i_receitas,
+	vwmd.tipo_movto
+UNION ALL
+SELECT 
+	abrev_movto          = 'PGTO',
+	desc_movimento       = 'Pagamento',
+	div.i_receitas,
+	ordem                = 3,
+	tipo_movimento       = 'D', 
+	desc_rec             = (SELECT nome FROM bethadba.receitas rec WHERE rec.i_receitas = div.i_receitas),
+	data_efeito_calc	   = :data_final,
+	valor_mov_divida     = IF tipo_movimento = 'D' THEN sum(isnull(pd.valor_dev_trib,0))*(-1) ELSE sum(isnull(pd.valor_dev_trib,0)) ENDIF,
+	valor_mov_corr       = IF tipo_movimento = 'D' THEN sum(isnull(pd.valor_cor,0) + isnull(pd.cor_parc,0))*(-1) ELSE sum(isnull(pd.valor_cor,0) + isnull(pd.cor_parc,0)) ENDIF,
+	valor_mov_juro       = IF tipo_movimento = 'D' THEN sum(isnull(pd.valor_jur,0) + isnull(pd.jur_parc,0))*(-1) ELSE sum(isnull(pd.valor_jur,0) + isnull(pd.jur_parc,0)) ENDIF,
+	valor_mov_mult       = IF tipo_movimento = 'D' THEN sum(isnull(pd.valor_mul,0) + isnull(pd.mul_parc,0))*(-1) ELSE sum(isnull(pd.valor_mul,0) + isnull(pd.mul_parc,0)) ENDIF,
+	valor_inicial_divida = 0,
+	valor_final_divida   = 0,
+	valor_inicial_corr   = 0,
+	valor_final_corr     = 0,
+	valor_inicial_juro   = 0,
+	valor_final_juro     = 0,
+	valor_inicial_mult   = 0,
+	valor_final_mult     = 0,
+	valor_pagamneto      = sum(rp.valor_pago),
+  valor_dif_pagamneto  = sum(IF rp.valor_dif > 0 THEN rp.valor_dif ELSE 0 ENDIF)
+FROM   
+	bethadba.pagtos p KEY JOIN bethadba.rec_pagtos rp KEY JOIN bethadba.dividas div KEY JOIN bethadba.receitas r, 
+	bethadba.pagtos_dividas  pd
+WHERE  
+	p.data_est IS NULL  AND
+	pd.i_pagtos = rp.i_pagtos AND    
+	pd.i_receitas = rp.i_receitas AND    
+	pd.i_refer = rp.i_dividas AND    
+	pd.i_classes = rp.i_classes AND    
+	pd.tipo_eve = rp.tipo_eve AND    
+	pd.tipo = 'D' AND    
+	p.data_pgto  BETWEEN :data_inicial AND :data_final AND    
+	div.i_receitas <> 50000 AND
+	EXISTS (SELECT 1 FROM bethadba.encerramentos_tributos et WHERE et.mes_encerrado >= :data_final AND et.data_reabertura IS NULL)
+GROUP BY
+	div.i_receitas	
+ORDER BY 3,4,2

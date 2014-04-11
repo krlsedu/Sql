@@ -1,0 +1,16 @@
+ALTER FUNCTION "tecbth_delta"."dbf_insert_num_baixa_desc_arq_unific"(	
+						a_num_baixas integer,
+						a_sub_receita integer,
+						a_divida integer,
+						a_data_vcto char(10)
+			)
+returns long varchar
+//criada por Carlos eduardo para inserir informações de que não há desconto definido pela guia, somente o definido através fórmula 
+//conforme informado pelo técnico da betha Marcos
+begin
+	INSERT INTO "bethadba"."numeros_baixas_descontos" 
+	( "i_num_baixas" , "i_lanctos" , "parcela" , "i_config" , "valor_desc_trib" , "valor_desc_corr" , "valor_desc_juro" , "valor_desc_multa" , "data_vcto" , "i_receitas" , "i_dividas" , "i_classes" , "tipo_eve" ) 
+	VALUES 
+	( a_num_baixas , null , null , null , 0.00 , 0.00 , 0.00 , 0.00 , a_data_vcto , a_sub_receita , a_divida , 0 , 'R' );
+	return  ('ok');
+end

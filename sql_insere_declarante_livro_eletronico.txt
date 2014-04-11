@@ -1,0 +1,8 @@
+insert into bethadba.declarantes
+select number()+133,e.i_pessoas,e.i_economicos,'N',e.tipo,null,null,'N','N','N','N' from 
+    bethadba.pessoas p,
+    bethadba.economicos e
+where
+    p.i_pessoas = e.i_pessoas and
+    not exists (select 1 from bethadba.declarantes where i_economicos = e.i_economicos) and
+    bethadba.dbf_sit_economico(e.i_economicos, today()) in ('I','P')
